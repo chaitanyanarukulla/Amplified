@@ -1,0 +1,27 @@
+# General
+.DS_Store
+.vscode/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+*.db
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+build/
+coverage/
+.npm/
+
+# Project specific
+chai_prep.db
+chroma_db/
+voice_profiles/

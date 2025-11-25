@@ -1,0 +1,18 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5173",
+      "localStorage": [
+        {
+          "name": "color-theme",
+          "value": "dark"
+        },
+        {
+          "name": "auth_token",
+          "value": "mock_token_12345"
+        }
+      ]
+    }
+  ]
+}

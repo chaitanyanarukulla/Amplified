@@ -1,0 +1,7 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - img [ref=e6]
+  - paragraph [ref=e8]: Loading...
+```

@@ -1,0 +1,52 @@
+
+Running 59 tests using 4 workers
+
+Starting login process...
+Checking for signup...
+Could not find login or signup forms
+  ✘   2 [chromium] › tests/specs/accessibility.spec.ts:13:3 › Accessibility › should have proper ARIA labels on navigation (5.7s)
+  ✘   3 [chromium] › tests/specs/dashboard.spec.ts:14:3 › Dashboard › should display all feature cards (6.6s)
+  ✓   5 [chromium] › tests/specs/accessibility.spec.ts:28:3 › Accessibility › should support keyboard navigation (510ms)
+Starting login process...
+Checking for signup...
+Could not find login or signup forms
+  ✘   1 [chromium] › tests/specs/errorHandling.spec.ts:11:3 › Error Handling › should handle API errors gracefully for suggestions (30.0s)
+  ✘   4 [chromium] › tests/specs/documents.meetingContext.spec.ts:20:3 › Meeting Documents / Context › should upload a document and display it (30.0s)
+  ✘   6 [chromium] › tests/specs/accessibility.spec.ts:42:3 › Accessibility › should have proper button roles (30.0s)
+  ✘   7 [chromium] › tests/specs/dashboard.spec.ts:34:3 › Dashboard › should navigate to Meeting Assistant from card (30.0s)
+Starting login process...
+Checking for signup...
+Could not find login or signup forms
+  ✘   9 [chromium] › tests/specs/interviewAssistant.spec.ts:17:3 › Interview Assistant (Stealth Mode) › should load interview assistant interface (30.0s)
+  -  12 [chromium] › tests/specs/interviewAssistant.spec.ts:33:8 › Interview Assistant (Stealth Mode) › should request a stall phrase
+  ✘   8 [chromium] › tests/specs/errorHandling.spec.ts:44:3 › Error Handling › should handle network errors (30.0s)
+  ✘  10 [chromium] › tests/specs/accessibility.spec.ts:54:3 › Accessibility › should have descriptive button text (30.0s)
+  ✘  11 [chromium] › tests/specs/dashboard.spec.ts:45:3 › Dashboard › should navigate to Mock Interview from card (30.0s)
+Starting login process...
+Checking for signup...
+Could not find login or signup forms
+  ✘  13 [chromium] › tests/specs/errorHandling.spec.ts:59:3 › Error Handling › should handle missing voice profile (30.0s)
+  ✘  14 [chromium] › tests/specs/knowledgeVault.spec.ts:14:3 › Knowledge Vault › should display Knowledge Vault interface (30.0s)
+  ✘  15 [chromium] › tests/specs/accessibility.spec.ts:66:3 › Accessibility › should have proper form labels (30.0s)
+  ✘  16 [chromium] › tests/specs/dashboard.spec.ts:54:3 › Dashboard › should navigate to Interview Assistant from card (30.0s)
+Starting login process...
+Checking for signup...
+Could not find login or signup forms
+  ✘  20 [chromium] › tests/specs/dashboard.spec.ts:65:3 › Dashboard › should display sidebar navigation (5.7s)
+Starting login process...
+Checking for signup...
+Could not find login or signup forms
+  ✘  21 [chromium] › tests/specs/dashboard.spec.ts:77:3 › Dashboard › should highlight active navigation item (5.7s)
+  ✘  18 [chromium] › tests/specs/knowledgeVault.spec.ts:26:3 › Knowledge Vault › should navigate back to dashboard (30.0s)
+  ✘  17 [chromium] › tests/specs/errorHandling.spec.ts:75:3 › Error Handling › should validate file uploads (30.0s)
+  ✘  19 [chromium] › tests/specs/accessibility.spec.ts:78:3 › Accessibility › should have visible focus indicators (30.0s)
+  ✘  25 [chromium] › tests/specs/accessibility.spec.ts:90:3 › Accessibility › should have proper heading hierarchy (5.3s)
+  ✘  26 [chromium] › tests/specs/accessibility.spec.ts:108:3 › Accessibility › should have alt text for icons and images (208ms)
+  ✘  22 [chromium] › tests/specs/meetingAssistant.continueMeeting.spec.ts:19:3 › Meeting Assistant - Continue Meeting › should continue a previous meeting from history (30.0s)
+  ✘  24 [chromium] › tests/specs/knowledgeVault.spec.ts:38:3 › Knowledge Vault › should be accessible from sidebar (30.0s)
+  ✘  23 [chromium] › tests/specs/errorHandling.spec.ts:94:3 › Error Handling › should handle WebSocket disconnection (30.0s)
+  ✘  29 [chromium] › tests/specs/navigation.spec.ts:14:3 › Navigation › should navigate to all tabs correctly (5.3s)
+  ✘  31 [chromium] › tests/specs/performance.spec.ts:12:3 › Performance › should load dashboard quickly (5.7s)
+  ✘  27 [chromium] › tests/specs/meetingAssistant.newMeeting.spec.ts:28:3 › Meeting Assistant - New Meeting › should start a new meeting and clear previous state (30.0s)
+  ✘  28 [chromium] › tests/specs/meetingHistory.spec.ts:14:3 › Meeting History › should display meeting history interface (30.0s)
+  ✘  30 [chromium] › tests/specs/mockInterview.flow.spec.ts:30:3 › Mock Interview Flow › should navigate to setup screen and prepare interview (30.0s)
