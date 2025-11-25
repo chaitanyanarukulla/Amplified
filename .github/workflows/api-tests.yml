@@ -12,7 +12,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: ./chai-prep/backend
+        working-directory: ./Amplified/backend
 
     steps:
     - uses: actions/checkout@v4
