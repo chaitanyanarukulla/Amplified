@@ -7,10 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/chaitanyanarukulla/Amplified/branch/main/graph/badge.svg)](https://codecov.io/gh/chaitanyanarukulla/Amplified)
 
+----
 
-**Amplified** – *Everything you already do—Amplified.*
-
-**Amplified** is an AI-powered engineering companion for:
+**Amplified** – *Amplify your work*
 
 - Meeting productivity  
 - Document and design review  
@@ -27,7 +26,107 @@ It combines real-time transcription, intelligent summaries, action item tracking
 - **Mock Interview Assistant** 
 
 ---
+## 🧰 Tech Stack
 
+* **Frontend**
+
+  * Electron
+  * React
+  * Tailwind CSS (glassmorphism-inspired UI)
+  * Playwright (end-to-end tests)
+
+* **Backend**
+
+  * Python
+  * FastAPI
+  * WebSockets
+  * SQLModel
+  * pytest (API tests)
+
+* **Authentication**
+
+  * JWT tokens
+  * bcrypt password hashing
+
+* **AI / LLM**
+
+  * Central LLM router with multiple engines:
+
+    * OpenAI GPT-4o (default)
+    * Claude 3 Opus (Anthropic)
+    * Local LLM via **Ollama** (e.g., `llama3.2:3b`)
+
+* **Transcription**
+
+  * Deepgram Nova-2 for low-latency streaming ASR
+
+* **Database**
+
+  * SQLite for:
+
+    * Users
+    * Meetings & sessions
+    * Summaries & action items
+    * Documents
+    * LLM preferences & Jira/Test Gen data
+
+
+## 🧰 Tech Stack
+
+* **Frontend**
+
+  * Electron
+  * React
+  * Tailwind CSS (glassmorphism-inspired UI)
+  * Playwright (end-to-end tests)
+
+* **Backend**
+
+  * Python
+  * FastAPI
+  * WebSockets
+  * SQLModel
+  * pytest (API tests)
+
+* **Authentication**
+
+  * JWT tokens
+  * bcrypt password hashing
+
+* **AI / LLM**
+
+  * Central LLM router with multiple engines:
+
+    * OpenAI GPT-4o (default)
+    * Claude 3 Opus (Anthropic)
+    * Local LLM via **Ollama** (e.g., `llama3.2:3b`)
+
+* **Transcription**
+
+  * Deepgram Nova-2 for low-latency streaming ASR
+
+* **Testing**
+
+  * pytest (API tests)
+  * Playwright (end-to-end tests)
+
+* **Logging**
+
+  * Python logging
+
+* **Database**
+
+  * SQLite for:
+
+    * Users
+    * Meetings & sessions
+    * Summaries & action items
+    * Documents
+    * LLM preferences & Jira/Test Gen data
+
+
+
+---
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -114,7 +213,8 @@ Pick which AI engine powers Amplified—globally, across all features:
 
 * **Seamless Switching**
   Change the active engine from the dashboard at any time; all features (meetings, interviews, test gen, reviews) will use the selected engine through a central router.
-----
+
+---
 
 ### 2. 📝 Meeting Assistant
 
@@ -149,8 +249,6 @@ Turn your meetings into structured knowledge:
 
 * **Voice Profile**
   Enroll your voice so transcripts show your **name** instead of “Speaker 0”.
-
----
 
 ---
 
@@ -189,7 +287,7 @@ Turn Jira user stories into structured, ready-to-use test cases in seconds.
 Drastically reduce manual test-writing time while **improving coverage, consistency, and clarity** across QA.
 
 ---
-### 4. 🕵️ Interview Assistant (Help manager  rate interviews)
+### 4. 🕵️ Interview Assistant (Help managers conduct and rate interviews)
 
 Real-time help during live interviews:
 
@@ -243,9 +341,10 @@ Level up your interview preparation:
 
 * **(Optional) Voice Selection**
   Choose which TTS voice is used for asking questions, for a more natural practice experience.
+
 ---
 
-### 6. 🔐 User Authentication
+###  🔐 User Authentication
 
 Secure, personalized experience per user:
 
@@ -440,57 +539,18 @@ cd Amplified/backend
 source venv/bin/activate
 pytest
 ```
-
 This will output a coverage summary in the terminal and generate a detailed HTML report in `Amplified/backend/htmlcov/index.html`.
 
 ---
 
-## 🧰 Tech Stack
-
-* **Frontend**
-
-  * Electron
-  * React
-  * Tailwind CSS (glassmorphism-inspired UI)
-  * Playwright (end-to-end tests)
-
-* **Backend**
-
-  * Python
-  * FastAPI
-  * WebSockets
-  * SQLModel
-  * pytest (API tests)
-
-* **Authentication**
-
-  * JWT tokens
-  * bcrypt password hashing
-
-* **AI / LLM**
-
-  * Central LLM router with multiple engines:
-
-    * OpenAI GPT-4o (default)
-    * Claude 3 Opus (Anthropic)
-    * Local LLM via **Ollama** (e.g., `llama3.2:3b`)
-
-* **Transcription**
-
-  * Deepgram Nova-2 for low-latency streaming ASR
-
-* **Database**
-
-  * SQLite for:
-
-    * Users
-    * Meetings & sessions
-    * Summaries & action items
-    * Documents
-    * LLM preferences & Jira/Test Gen data
-
+## Authentication
 For more details on authentication internals, see
 `AUTH_IMPLEMENTATION_PROGRESS.md`.
+
+---
+## Logging
+For more details on logging implementation, see
+`LOGGING_IMPLEMENTATION.md`.
 
 ---
 

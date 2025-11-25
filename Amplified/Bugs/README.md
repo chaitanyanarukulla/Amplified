@@ -48,6 +48,7 @@ cp .env.example .env
 # - DEEPGRAM_API_KEY    (required)
 # - ANTHROPIC_API_KEY   (optional, for Claude)
 # - JWT_SECRET_KEY      (optional; auto-generated if omitted)
+# - LOG_LEVEL           (optional; default: INFO)
 ````
 
 ### 2. Frontend Setup
@@ -439,6 +440,7 @@ To keep the Electron + React frontend maintainable and responsive, several share
   * WebSockets
   * SQLModel
   * pytest (API tests)
+  * structlog (Structured Logging)
 
 * **Authentication**
 
@@ -467,8 +469,15 @@ To keep the Electron + React frontend maintainable and responsive, several share
     * Documents
     * LLM preferences & Jira/Test Gen data
 
+
+* **“Authentication”**
 For more details on authentication internals, see
 `AUTH_IMPLEMENTATION_PROGRESS.md`.
+
+
+* **“Logging”**
+For more details on logging implementation, see
+`LOGGING_IMPLEMENTATION.md`.
 
 ---
 
