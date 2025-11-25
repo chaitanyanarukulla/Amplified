@@ -3,7 +3,7 @@ import os
 import sys
 from httpx import AsyncClient, ASGITransport
 from typing import AsyncGenerator, Generator
-from sqlmodel import Session, select
+from sqlmodel import Session, select, SQLModel
 
 # Add the backend directory to sys.path so we can import 'app'
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,6 +17,10 @@ import uuid
 @pytest.fixture(scope="session")
 def anyio_backend():
     return "asyncio"
+
+@pytest.fixture(scope="session", autouse=True)
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
 
 @pytest.fixture(scope="function")
 async def test_user() -> User:
