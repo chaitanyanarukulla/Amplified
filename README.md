@@ -1,6 +1,11 @@
 
 # Amplified
 [![CI](https://github.com/chaitanyanarukulla/Amplified/actions/workflows/api-tests.yml/badge.svg)](https://github.com/chaitanyanarukulla/Amplified/actions/workflows/api-tests.yml)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![codecov](https://codecov.io/gh/chaitanyanarukulla/Amplified/branch/main/graph/badge.svg)](https://codecov.io/gh/chaitanyanarukulla/Amplified)
 
 
 **Amplified** – *Everything you already do—Amplified.*
