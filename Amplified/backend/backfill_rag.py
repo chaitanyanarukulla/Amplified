@@ -10,11 +10,12 @@ Usage:
 
 import asyncio
 import structlog
+import json
 from sqlmodel import Session, select
 from datetime import datetime
 
 from app.database import engine
-from app.models import Document, Meeting, MeetingSummary, MeetingAction
+from app.models import Document, Meeting, MeetingSummary, MeetingAction, TestCaseGeneration
 from app.services.vector_store_service import VectorStoreService, SearchableEntity
 
 logger = structlog.get_logger(__name__)
@@ -140,12 +141,88 @@ Action Items:
         logger.info(f"Meeting backfill complete: {indexed_count} indexed, {failed_count} failed")
 
 
+async def backfill_test_cases():
+    """Index all existing test case generations"""
+    logger.info("Starting test case backfill...")
+    
+    with Session(engine) as session:
+        statement = select(TestCaseGeneration)
+        generations = session.exec(statement).all()
+        
+        indexed_count = 0
+        failed_count = 0
+        
+        for gen in generations:
+            try:
+                # Parse test cases from JSON
+                test_cases = json.loads(gen.generated_test_cases)
+                test_case_list = test_cases.get("test_cases", [])
+                
+                if not test_case_list:
+                    logger.warning(f"Skipping generation {gen.id} - no test cases")
+                    continue
+                
+                # Format test cases
+                formatted_cases = []
+                for i, tc in enumerate(test_case_list, 1):
+                    tc_type = tc.get("type", "unknown")
+                    title = tc.get("title", "Untitled")
+                    steps = tc.get("steps", [])
+                    expected = tc.get("expected_result", "")
+                    priority = tc.get("priority", "medium")
+                    
+                    formatted = f"""Test Case {i}: {title}
+Type: {tc_type}
+Priority: {priority}
+
+Steps:
+{chr(10).join([f"{j}. {step}" for j, step in enumerate(steps, 1)])}
+
+Expected Result:
+{expected}
+"""
+                    formatted_cases.append(formatted)
+                
+                content = f"""Test Suite for: {gen.jira_ticket_key} - {gen.jira_title}
+
+Total Test Cases: {len(test_case_list)}
+
+{chr(10).join(formatted_cases)}
+"""
+                
+                entity = SearchableEntity(
+                    entity_id=gen.id,
+                    entity_type="test_case",
+                    content=content,
+                    user_id=gen.user_id,
+                    created_at=gen.created_at,
+                    updated_at=gen.created_at,
+                    metadata={
+                        "jira_ticket": gen.jira_ticket_key,
+                        "ticket_title": gen.jira_title,
+                        "test_count": len(test_case_list),
+                        "test_types": list(set(tc.get("type", "unknown") for tc in test_case_list))
+                    }
+                )
+                
+                chunk_count = vector_store.index_entity(entity)
+                indexed_count += 1
+                logger.info(f"Indexed test suite {gen.id} ({gen.jira_ticket_key}) - {chunk_count} chunks")
+                
+            except Exception as e:
+                failed_count += 1
+                logger.error(f"Failed to index test generation {gen.id}: {e}")
+        
+        logger.info(f"Test case backfill complete: {indexed_count} indexed, {failed_count} failed")
+
+
 async def main():
     """Run all backfill operations"""
     logger.info("=== Starting RAG Backfill ===")
     
     await backfill_documents()
     await backfill_meetings()
+    await backfill_test_cases()
     
     logger.info("=== Backfill Complete ===")
 
