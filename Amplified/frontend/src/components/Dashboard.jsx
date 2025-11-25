@@ -54,7 +54,7 @@ const Dashboard = ({ onNavigate }) => {
         <div className="p-8 max-w-7xl mx-auto w-full space-y-8">
             {/* Welcome Section */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Ready to amplify your workflow?</h1>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Amplify your Work</h1>
                 <p className="text-slate-500 dark:text-slate-400">Select a mode to activate your AI companion.</p>
             </div>
 
@@ -64,8 +64,8 @@ const Dashboard = ({ onNavigate }) => {
                 onEngineChange={handleEngineChange}
             />
 
-            {/* Hero Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Main Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Meeting Assistant */}
                 <div
                     onClick={() => onNavigate('meeting')}
@@ -89,26 +89,49 @@ const Dashboard = ({ onNavigate }) => {
                     </button>
                 </div>
 
-                {/* Mock Interview */}
+                {/* Test Case Generator */}
                 <div
-                    onClick={() => onNavigate('mock')}
-                    className="group glass-card p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)] border-violet-200 dark:border-violet-500/10 hover:border-violet-400 dark:hover:border-violet-500/30 relative overflow-hidden bg-white/60 dark:bg-slate-800/40"
+                    onClick={() => onNavigate('test-gen')}
+                    className="group glass-card p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] border-emerald-200 dark:border-emerald-500/10 hover:border-emerald-400 dark:hover:border-emerald-500/30 relative overflow-hidden bg-white/60 dark:bg-slate-800/40"
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-20 h-20 bg-violet-500/10 dark:bg-violet-500/20 blur-2xl rounded-full"></div>
+                        <div className="w-20 h-20 bg-emerald-500/10 dark:bg-emerald-500/20 blur-2xl rounded-full"></div>
                     </div>
 
-                    <div className="w-12 h-12 bg-violet-100 dark:bg-violet-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-violet-200 dark:border-violet-500/20">
-                        <Brain className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-emerald-200 dark:border-emerald-500/20">
+                        <Code className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                     </div>
 
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Mock Interview</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Test Case Generator</h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
-                        Practice with realistic AI scenarios.
+                        Instantly generate comprehensive positive, negative, and edge cases from your Jira tickets.
                     </p>
 
-                    <button className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20">
-                        Start Practice <ChevronRight size={16} />
+                    <button className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+                        Generate Tests <ChevronRight size={16} />
+                    </button>
+                </div>
+
+                {/* Document Quality Analyzer */}
+                <div
+                    onClick={() => onNavigate('doc-analyzer')}
+                    className="group glass-card p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(217,70,239,0.2)] border-fuchsia-200 dark:border-fuchsia-500/10 hover:border-fuchsia-400 dark:hover:border-fuchsia-500/30 relative overflow-hidden bg-white/60 dark:bg-slate-800/40"
+                >
+                    <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-20 h-20 bg-fuchsia-500/10 dark:bg-fuchsia-500/20 blur-2xl rounded-full"></div>
+                    </div>
+
+                    <div className="w-12 h-12 bg-fuchsia-100 dark:bg-fuchsia-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-fuchsia-200 dark:border-fuchsia-500/20">
+                        <FileText className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-400" />
+                    </div>
+
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Doc Analyzer</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
+                        Analyze BRDs & PRDs for risks, gaps, and test scenarios.
+                    </p>
+
+                    <button className="w-full py-2.5 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-fuchsia-500/20">
+                        Analyze Docs <ChevronRight size={16} />
                     </button>
                 </div>
 
@@ -136,53 +159,27 @@ const Dashboard = ({ onNavigate }) => {
                         Enter Stealth <ChevronRight size={16} />
                     </button>
                 </div>
-            </div>
 
-            {/* Secondary Widgets */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Test Case Generator */}
+                {/* Mock Interview */}
                 <div
-                    onClick={() => onNavigate('test-gen')}
-                    className="group glass-card p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] border-emerald-200 dark:border-emerald-500/10 hover:border-emerald-400 dark:hover:border-emerald-500/30 relative overflow-hidden bg-white/60 dark:bg-slate-800/40"
+                    onClick={() => onNavigate('mock')}
+                    className="group glass-card p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(139,92,246,0.2)] border-violet-200 dark:border-violet-500/10 hover:border-violet-400 dark:hover:border-violet-500/30 relative overflow-hidden bg-white/60 dark:bg-slate-800/40"
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-20 h-20 bg-emerald-500/10 dark:bg-emerald-500/20 blur-2xl rounded-full"></div>
+                        <div className="w-20 h-20 bg-violet-500/10 dark:bg-violet-500/20 blur-2xl rounded-full"></div>
                     </div>
 
-                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-emerald-200 dark:border-emerald-500/20">
-                        <Code className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                    <div className="w-12 h-12 bg-violet-100 dark:bg-violet-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-violet-200 dark:border-violet-500/20">
+                        <Brain className="w-6 h-6 text-violet-600 dark:text-violet-400" />
                     </div>
 
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Test Case Generator</h3>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Mock Interview</h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
-                        Instantly generate comprehensive positive, negative, and edge cases from your Jira tickets.
+                        Practice with realistic AI scenarios.
                     </p>
 
-                    <button className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
-                        Generate Tests <ChevronRight size={16} />
-                    </button>
-                </div>
-
-                {/* Document Quality Analyzer */}
-                <div
-                    onClick={() => onNavigate('doc-analyzer')}
-                    className="lg:col-span-1 group glass-card p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(217,70,239,0.2)] border-fuchsia-200 dark:border-fuchsia-500/10 hover:border-fuchsia-400 dark:hover:border-fuchsia-500/30 relative overflow-hidden bg-white/60 dark:bg-slate-800/40"
-                >
-                    <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-20 h-20 bg-fuchsia-500/10 dark:bg-fuchsia-500/20 blur-2xl rounded-full"></div>
-                    </div>
-
-                    <div className="w-12 h-12 bg-fuchsia-100 dark:bg-fuchsia-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-fuchsia-200 dark:border-fuchsia-500/20">
-                        <FileText className="w-6 h-6 text-fuchsia-600 dark:text-fuchsia-400" />
-                    </div>
-
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Doc Analyzer</h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
-                        Analyze BRDs & PRDs for risks, gaps, and test scenarios.
-                    </p>
-
-                    <button className="w-full py-2.5 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-fuchsia-500/20">
-                        Analyze Docs <ChevronRight size={16} />
+                    <button className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20">
+                        Start Practice <ChevronRight size={16} />
                     </button>
                 </div>
 

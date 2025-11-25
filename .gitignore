@@ -25,3 +25,7 @@ coverage/
 amplified.db
 amplified_vectors/
 voice_profiles/
+
+# Coverage
+.coverage
+coverage.xml
