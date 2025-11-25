@@ -1,4 +1,4 @@
-````markdown
+
 # Amplified
 [![CI](https://github.com/chaitanyanarukulla/Amplified/actions/workflows/api-tests.yml/badge.svg)](https://github.com/chaitanyanarukulla/Amplified/actions/workflows/api-tests.yml)
 
