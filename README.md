@@ -492,7 +492,7 @@ For more details on authentication internals, see
 
 * **DB Migration Issues**
 
-  * If schema mismatches occur in dev, you can reset by deleting the local DB file (e.g., `backend/chai_prep.db` or `amplified.db`) and restarting.
+  * If schema mismatches occur in dev, you can reset by deleting the local DB file (e.g., `backend/amplified.db`) and restarting.
     *(Only do this in local/dev environments.)*
 
 ### Frontend

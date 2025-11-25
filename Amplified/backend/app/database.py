@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, create_engine, Session
 from typing import Generator
 
-sqlite_file_name = "chai_prep.db"
+sqlite_file_name = "amplified.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}

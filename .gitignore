@@ -22,6 +22,6 @@ coverage/
 .npm/
 
 # Project specific
-chai_prep.db
-chroma_db/
+amplified.db
+amplified_vectors/
 voice_profiles/

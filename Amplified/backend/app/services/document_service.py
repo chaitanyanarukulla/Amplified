@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class DocumentService:
     def __init__(self):
         # Initialize ChromaDB
-        self.chroma_client = chromadb.PersistentClient(path="./chroma_db")
+        self.chroma_client = chromadb.PersistentClient(path="./amplified_vectors")
         self.collection = self.chroma_client.get_or_create_collection(name="documents")
         
     async def process_upload(self, file: UploadFile, type: str, tags: List[str], user_id: str) -> Document:
