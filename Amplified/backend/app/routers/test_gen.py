@@ -13,11 +13,13 @@ from app.database import engine
 from app.models import TestCaseGeneration, User
 from app.services.jira_service import JiraService
 from app.services.session_manager import session_manager
+from app.services.vector_store_service import VectorStoreService, SearchableEntity
 from app.auth_dependencies import get_current_user
 
 router = APIRouter(prefix="/test-gen", tags=["test-gen"])
 logger = structlog.get_logger(__name__)
 jira_service = JiraService()
+vector_store = VectorStoreService(collection_name="unified_knowledge")
 
 # --- Request/Response Models ---
 
@@ -196,7 +198,7 @@ async def save_test_cases(
     request: SaveRequest,
     current_user: User = Depends(get_current_user)
 ):
-    """Save generated test cases"""
+    """Save generated test cases and index them for RAG"""
     try:
         with Session(engine) as session:
             generation = TestCaseGeneration(
@@ -209,10 +211,83 @@ async def save_test_cases(
             )
             session.add(generation)
             session.commit()
+            
+            # Index test cases for RAG
+            await _index_test_cases(
+                generation_id=generation.id,
+                ticket_key=request.ticket_key,
+                ticket_title=request.ticket_title,
+                test_cases=request.generated_test_cases,
+                user_id=current_user.id
+            )
+            
             return {"status": "success", "id": generation.id}
     except Exception as e:
         logger.error(f"Save failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def _index_test_cases(
+    generation_id: str,
+    ticket_key: str,
+    ticket_title: str,
+    test_cases: Dict[str, Any],
+    user_id: str
+):
+    """Index test cases into vector store for RAG"""
+    try:
+        # Format test cases as searchable text
+        test_case_list = test_cases.get("test_cases", [])
+        
+        formatted_cases = []
+        for i, tc in enumerate(test_case_list, 1):
+            tc_type = tc.get("type", "unknown")
+            title = tc.get("title", "Untitled")
+            steps = tc.get("steps", [])
+            expected = tc.get("expected_result", "")
+            priority = tc.get("priority", "medium")
+            
+            formatted = f"""Test Case {i}: {title}
+Type: {tc_type}
+Priority: {priority}
+
+Steps:
+{chr(10).join([f"{j}. {step}" for j, step in enumerate(steps, 1)])}
+
+Expected Result:
+{expected}
+"""
+            formatted_cases.append(formatted)
+        
+        content = f"""Test Suite for: {ticket_key} - {ticket_title}
+
+Total Test Cases: {len(test_case_list)}
+
+{chr(10).join(formatted_cases)}
+"""
+        
+        entity = SearchableEntity(
+            entity_id=generation_id,
+            entity_type="test_case",
+            content=content,
+            user_id=user_id,
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+            metadata={
+                "jira_ticket": ticket_key,
+                "ticket_title": ticket_title,
+                "test_count": len(test_case_list),
+                "test_types": list(set(tc.get("type", "unknown") for tc in test_case_list))
+            }
+        )
+        
+        vector_store.index_entity(entity)
+        logger.info(f"Indexed test suite {generation_id} for ticket {ticket_key}")
+        
+    except Exception as e:
+        logger.error(f"Failed to index test cases {generation_id}: {e}")
+        # Don't raise - indexing failure shouldn't block save
+
 
 @router.get("/history")
 async def get_history(current_user: User = Depends(get_current_user)):
@@ -426,3 +501,31 @@ async def get_generation(
             "generated_test_cases": json.loads(generation.generated_test_cases),
             "created_at": generation.created_at
         }
+
+@router.delete("/{generation_id}")
+async def delete_generation(
+    generation_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a test case generation from SQL and vector store"""
+    with Session(engine) as session:
+        # Verify ownership
+        generation = session.exec(
+            select(TestCaseGeneration).where(
+                TestCaseGeneration.id == generation_id,
+                TestCaseGeneration.user_id == current_user.id
+            )
+        ).first()
+        
+        if not generation:
+            raise HTTPException(status_code=404, detail="Not found")
+        
+        # Delete from SQL
+        session.delete(generation)
+        session.commit()
+    
+    # Delete from vector store
+    vector_store.delete_by_entity_id(generation_id, current_user.id)
+    logger.info(f"Deleted test generation {generation_id} from SQL and vector store")
+    
+    return {"status": "success", "message": "Test generation deleted"}
