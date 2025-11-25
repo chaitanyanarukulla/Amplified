@@ -29,4 +29,6 @@ jobs:
         
     - name: Run tests
       run: |
-        pytest -v tests/
+        pwd
+        ls -R
+        python -m pytest -v tests/
