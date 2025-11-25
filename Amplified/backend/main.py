@@ -24,7 +24,7 @@ from app.dependencies import meeting_service, voice_service
 from app.services.auth_service import decode_access_token
 
 # Import Routers
-from app.routers import documents, meetings, voice, interview, research, qa, test_gen, neural_engine, auth, doc_analyzer
+from app.routers import documents, meetings, voice, interview, research, qa, test_gen, neural_engine, auth, doc_analyzer, knowledge
 
 # Configure logging
 # Configure logging
@@ -67,6 +67,7 @@ app.include_router(qa.router)
 app.include_router(test_gen.router)
 app.include_router(neural_engine.router)
 app.include_router(doc_analyzer.router)
+app.include_router(knowledge.router)
 
 @app.get("/")
 async def root():

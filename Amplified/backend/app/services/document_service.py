@@ -5,21 +5,19 @@ from typing import List, Optional
 from datetime import datetime
 from fastapi import UploadFile
 from sqlmodel import Session, select
-import chromadb
-from chromadb.config import Settings
 from pypdf import PdfReader
 from docx import Document as DocxDocument
 
 from app.models import Document, DocumentType
 from app.database import engine
+from app.services.vector_store_service import VectorStoreService, SearchableEntity
 
 logger = structlog.get_logger(__name__)
 
 class DocumentService:
     def __init__(self):
-        # Initialize ChromaDB
-        self.chroma_client = chromadb.PersistentClient(path="./amplified_vectors")
-        self.collection = self.chroma_client.get_or_create_collection(name="documents")
+        # Use unified vector store service
+        self.vector_store = VectorStoreService(collection_name="unified_knowledge")
         
     async def process_upload(self, file: UploadFile, type: str, tags: List[str], user_id: str) -> Document:
         """
@@ -51,20 +49,24 @@ class DocumentService:
             session.commit()
             session.refresh(document)
             
-        # 3. Generate Embeddings & Store in Vector DB
-        # Split text into chunks (simple splitting for now)
-        chunks = self._chunk_text(text_content)
-        
-        ids = [f"{doc_id}_{i}" for i in range(len(chunks))]
-        metadatas = [{"doc_id": doc_id, "user_id": user_id, "filename": filename, "type": type} for _ in chunks]
-        
-        self.collection.add(
-            documents=chunks,
-            metadatas=metadatas,
-            ids=ids
+        # 3. Index using unified vector store
+        entity = SearchableEntity(
+            entity_id=doc_id,
+            entity_type="document",
+            content=text_content,
+            user_id=user_id,
+            created_at=document.created_at,
+            updated_at=document.created_at,
+            metadata={
+                "filename": filename,
+                "doc_type": type,
+                "tags": ",".join(tags) if tags else ""
+            }
         )
         
-        logger.info(f"Processed document {filename} with {len(chunks)} chunks")
+        chunk_count = self.vector_store.index_entity(entity)
+        logger.info(f"Processed document {filename} with {chunk_count} chunks")
+        
         return document
 
     def _extract_text(self, content: bytes, filename: str) -> str:
@@ -98,40 +100,30 @@ class DocumentService:
             except Exception:
                 return ""
 
-    def _chunk_text(self, text: str, chunk_size: int = 1000, overlap: int = 100) -> List[str]:
-        """Simple text chunking"""
-        chunks = []
-        start = 0
-        while start < len(text):
-            end = start + chunk_size
-            chunks.append(text[start:end])
-            start = end - overlap
-        return chunks
-
     def search_documents(self, query: str, limit: int = 5, user_id: str = None) -> List[dict]:
-        """Search for relevant document chunks"""
-        # Build where filter for user_id
-        where_filter = {"user_id": user_id} if user_id else None
-        
-        results = self.collection.query(
-            query_texts=[query],
-            n_results=limit,
-            where=where_filter
+        """Search for relevant document chunks using unified vector store"""
+        if not user_id:
+            return []
+            
+        results = self.vector_store.search(
+            query=query,
+            user_id=user_id,
+            limit=limit,
+            entity_type="document"
         )
         
-        # Format results
+        # Format results for backwards compatibility
         formatted_results = []
-        if results['documents']:
-            for i, doc_text in enumerate(results['documents'][0]):
-                metadata = results['metadatas'][0][i]
-                formatted_results.append({
-                    "document_id": metadata['doc_id'],
-                    "filename": metadata['filename'],
-                    "snippet": doc_text,
-                    "score": 0.0 # Chroma doesn't return cosine score by default in this simple API usage without distance
-                })
+        for result in results:
+            formatted_results.append({
+                "document_id": result["entity_id"],
+                "filename": result["metadata"].get("filename", "Unknown"),
+                "snippet": result["content"],
+                "score": 1.0 - result["distance"] if result["distance"] else 0.0
+            })
                 
         return formatted_results
+
 
     def list_documents(
         self, 
@@ -150,6 +142,7 @@ class DocumentService:
             return results
 
     def delete_document(self, document_id: str, user_id: str):
+        """Delete document from SQL and vector store"""
         with Session(engine) as session:
             # Verify ownership
             statement = select(Document).where(
@@ -161,8 +154,5 @@ class DocumentService:
                 session.delete(doc)
                 session.commit()
                 
-        # Delete from Vector DB
-        # Note: Chroma delete by metadata is supported
-        self.collection.delete(
-            where={"doc_id": document_id, "user_id": user_id}
-        )
+        # Delete from Vector Store using unified service
+        self.vector_store.delete_by_entity_id(document_id, user_id)

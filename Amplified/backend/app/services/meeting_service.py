@@ -5,10 +5,15 @@ from sqlmodel import Session, select
 from app.database import engine
 from app.models import Meeting, MeetingSummary, MeetingAction, MeetingCreate, MeetingUpdate, ActionCreate
 from app.services.llm_service import LLMService
+from app.services.vector_store_service import VectorStoreService, SearchableEntity
+import structlog
+
+logger = structlog.get_logger(__name__)
 
 class MeetingService:
     def __init__(self):
         self.llm_service = LLMService()
+        self.vector_store = VectorStoreService(collection_name="unified_knowledge")
 
     def create_meeting(self, meeting_data: MeetingCreate, user_id: str) -> Meeting:
         with Session(engine) as session:
@@ -73,6 +78,7 @@ class MeetingService:
             return meeting
 
     def delete_meeting(self, meeting_id: str, user_id: str):
+        """Delete meeting from SQL and vector store"""
         with Session(engine) as session:
             statement = select(Meeting).where(
                 Meeting.id == meeting_id,
@@ -83,6 +89,10 @@ class MeetingService:
                 # Database cascade will handle summaries and actions
                 session.delete(meeting)
                 session.commit()
+                
+        # Delete from vector store
+        self.vector_store.delete_by_entity_id(meeting_id, user_id)
+        logger.info(f"Deleted meeting {meeting_id} from SQL and vector store")
 
     def add_action_item(self, meeting_id: str, action_data: ActionCreate, user_id: str) -> MeetingAction:
         with Session(engine) as session:
@@ -250,6 +260,9 @@ Previous Sessions Summary:
                     "status": action.status
                 })
         
+        # 6. Index meeting summary in vector store for RAG
+        await self._index_meeting_summary(meeting_id, user_id, short_summary, detailed_summary, action_dicts)
+        
         # Return a dict-based summary that can be used outside the session
         return {
             "short_summary": summary_dict["short_summary"],
@@ -258,6 +271,62 @@ Previous Sessions Summary:
             "session_number": summary_dict["session_number"],
             "action_items": action_dicts
         }
+    
+    async def _index_meeting_summary(
+        self,
+        meeting_id: str,
+        user_id: str,
+        short_summary: str,
+        detailed_summary: str,
+        action_items: List[dict]
+    ):
+        """Index meeting summary and actions into vector store"""
+        try:
+            # Get meeting details for metadata
+            meeting = self.get_meeting(meeting_id, user_id)
+            if not meeting:
+                logger.warning(f"Meeting {meeting_id} not found for indexing")
+                return
+            
+            # Format content for indexing
+            action_text = "\n".join([
+                f"- {item['description']} (Owner: {item.get('owner', 'Unknown')})"
+                for item in action_items
+            ])
+            
+            content = f"""Meeting: {meeting.title}
+Date: {meeting.start_time.strftime('%Y-%m-%d %H:%M')}
+
+Summary:
+{short_summary}
+
+Details:
+{detailed_summary}
+
+Action Items:
+{action_text if action_text else 'No action items'}
+"""
+            
+            entity = SearchableEntity(
+                entity_id=meeting_id,
+                entity_type="meeting",
+                content=content,
+                user_id=user_id,
+                created_at=meeting.created_at,
+                updated_at=datetime.now(),
+                metadata={
+                    "meeting_title": meeting.title,
+                    "platform": meeting.platform or "unknown",
+                    "tags": meeting.tags or "",
+                    "action_count": len(action_items)
+                }
+            )
+            
+            self.vector_store.index_entity(entity)
+            logger.info(f"Indexed meeting {meeting_id} into vector store")
+            
+        except Exception as e:
+            logger.error(f"Failed to index meeting {meeting_id}: {e}")
 
     def update_action_status(self, action_id: str, status: str, user_id: str) -> Optional[MeetingAction]:
         with Session(engine) as session:
