@@ -2,12 +2,12 @@
 Export Service - Generate PDF and Markdown exports of analysis reports
 """
 
-import logging
+import structlog
 import json
 from typing import Dict, Any
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class ExportService:
     

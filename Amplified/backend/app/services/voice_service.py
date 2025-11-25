@@ -1,12 +1,12 @@
 import os
 import uuid
-import logging
+import structlog
 from fastapi import UploadFile
 from sqlmodel import Session, select
 from app.database import engine
 from app.models import VoiceProfile
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class VoiceService:
     def __init__(self):

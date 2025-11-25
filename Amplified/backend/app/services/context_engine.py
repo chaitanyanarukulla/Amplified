@@ -3,13 +3,13 @@ Context Engine - Document Management and Context Injection
 Handles resume, job descriptions, and pinned notes
 """
 
-import logging
+import structlog
 from typing import Dict, Optional
 import PyPDF2
 import docx
 import io
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class ContextEngine:

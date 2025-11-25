@@ -1,10 +1,10 @@
-import logging
+import structlog
 import io
 from typing import Dict, Any
 from PyPDF2 import PdfReader
 from docx import Document
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class ResumeParser:
     def __init__(self):

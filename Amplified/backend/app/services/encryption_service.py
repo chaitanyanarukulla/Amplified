@@ -1,8 +1,8 @@
 import os
 from cryptography.fernet import Fernet
-import logging
+import structlog
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class EncryptionService:
     def __init__(self):

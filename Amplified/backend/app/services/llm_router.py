@@ -4,7 +4,7 @@ Routes requests to OpenAI, Claude, or Local LLM based on user preference
 """
 
 import os
-import logging
+import structlog
 import asyncio
 from typing import Dict, Optional, Any
 from openai import AsyncOpenAI
@@ -14,7 +14,7 @@ from datetime import datetime
 from app.database import engine
 from app.models import UserLLMPreference
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class LLMRouter:
     """Central router for all LLM operations across the application"""

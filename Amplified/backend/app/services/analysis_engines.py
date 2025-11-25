@@ -3,11 +3,11 @@ Analysis Engines - LLM-powered document analysis functions
 Provides 4 analysis stages: Summary, Risks, Gaps, QA Report
 """
 
-import logging
+import structlog
 from typing import Dict, Any
 from app.services.llm_router import llm_router
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 async def generate_structured_summary(text: str, user_id: str) -> Dict[str, Any]:
     """

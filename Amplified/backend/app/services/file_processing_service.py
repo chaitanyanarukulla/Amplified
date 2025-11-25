@@ -1,11 +1,11 @@
 from typing import Dict, List, Any
-import logging
+import structlog
 from pypdf import PdfReader
 from docx import Document
 import pandas as pd
 import json
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class FileProcessingService:
     

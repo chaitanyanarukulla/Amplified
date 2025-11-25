@@ -2,7 +2,7 @@
 Document Analyzer Router - API endpoints for Document Quality Analyzer
 """
 
-import logging
+import structlog
 from typing import List, Optional
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks, Response
 from fastapi.responses import JSONResponse
@@ -20,7 +20,7 @@ from app.services.doc_analyzer_service import doc_analyzer_service
 from app.services.export_service import export_service
 
 router = APIRouter(prefix="/doc-analyzer", tags=["doc-analyzer"])
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 @router.post("/upload", response_model=AnalyzedDocumentResponse)
 async def upload_document(

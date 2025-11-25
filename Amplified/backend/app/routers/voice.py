@@ -1,11 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
-import logging
+import structlog
 from app.dependencies import voice_service
 from app.models import User
 from app.auth_dependencies import get_current_user
 
 router = APIRouter(prefix="/voice-profile", tags=["voice"])
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 @router.post("/enroll")
 async def enroll_voice(

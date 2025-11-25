@@ -1,4 +1,4 @@
-import logging
+import structlog
 from typing import Dict
 from datetime import datetime
 from fastapi import WebSocket
@@ -7,7 +7,7 @@ from app.services.audio_processor import AudioProcessor
 from app.services.context_engine import ContextEngine
 from app.services.llm_service import LLMService
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class SessionManager:
     def __init__(self):

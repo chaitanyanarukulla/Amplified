@@ -1,8 +1,8 @@
-import logging
+import structlog
 import re
 from duckduckgo_search import DDGS
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class ResearchService:
     def __init__(self):

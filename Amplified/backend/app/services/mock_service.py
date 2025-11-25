@@ -1,4 +1,4 @@
-import logging
+import structlog
 from typing import Dict
 from openai import AsyncOpenAI
 import os
@@ -7,7 +7,7 @@ import json
 #Import central router
 from app.services.llm_router import llm_router
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class MockInterviewService:
     """Manages mock interview question generation and answer evaluation"""

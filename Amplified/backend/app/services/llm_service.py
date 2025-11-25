@@ -4,7 +4,7 @@ Generates context-aware interview answers
 """
 
 import os
-import logging
+import structlog
 from typing import Dict, List, Optional
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from app.services.llm_router import llm_router
 
 load_dotenv()
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class LLMService:

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, Form
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-import logging
+import structlog
 import json
 import uuid
 import pandas as pd
@@ -16,7 +16,7 @@ from app.services.session_manager import session_manager
 from app.auth_dependencies import get_current_user
 
 router = APIRouter(prefix="/test-gen", tags=["test-gen"])
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 jira_service = JiraService()
 
 # --- Request/Response Models ---

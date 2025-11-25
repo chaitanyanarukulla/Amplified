@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends
-import logging
+import structlog
 from app.models import QARequest, User
 from app.dependencies import document_service
 from app.services.session_manager import session_manager
 from app.auth_dependencies import get_current_user
 
 router = APIRouter(prefix="/qa", tags=["qa"])
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 @router.post("/meeting")
 async def generate_qa_response(

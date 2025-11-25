@@ -1,6 +1,8 @@
 import os
 import asyncio
+import structlog
 import logging
+
 import json
 import threading
 from typing import Optional, Callable, Awaitable
@@ -19,7 +21,7 @@ from deepgram import (
 )
 
 load_dotenv()
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # Suppress noisy cancellation errors from Deepgram SDK
 logging.getLogger("deepgram.clients.common.v1.abstract_async_websocket").setLevel(logging.CRITICAL)

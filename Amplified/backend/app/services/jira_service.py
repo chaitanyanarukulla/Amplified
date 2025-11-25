@@ -1,5 +1,5 @@
 import httpx
-import logging
+import structlog
 from typing import Optional, Dict, Any
 from sqlmodel import Session, select
 from datetime import datetime
@@ -7,7 +7,7 @@ from app.database import engine
 from app.models import JiraSettings
 from app.services.encryption_service import EncryptionService
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class JiraService:
     def __init__(self):

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Form, HTTPException, Depends
-import logging
+import structlog
 from app.dependencies import research_service
 from app.services.session_manager import session_manager
 from app.models import User
 from app.auth_dependencies import get_current_user
 
 router = APIRouter(prefix="/research", tags=["research"])
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 @router.post("/role")
 async def research_role(

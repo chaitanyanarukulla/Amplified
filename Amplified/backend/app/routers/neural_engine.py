@@ -5,14 +5,14 @@ Endpoints for managing user LLM engine preferences
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-import logging
+import structlog
 
 from app.models import NeuralEnginePreference, User
 from app.services.llm_router import llm_router
 from app.auth_dependencies import get_current_user
 
 router = APIRouter(prefix="/neural-engine", tags=["neural-engine"])
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @router.get("")

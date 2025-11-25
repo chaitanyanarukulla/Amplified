@@ -1,6 +1,6 @@
 import os
 import uuid
-import logging
+import structlog
 from typing import List, Optional
 from datetime import datetime
 from fastapi import UploadFile
@@ -13,7 +13,7 @@ from docx import Document as DocxDocument
 from app.models import Document, DocumentType
 from app.database import engine
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 class DocumentService:
     def __init__(self):

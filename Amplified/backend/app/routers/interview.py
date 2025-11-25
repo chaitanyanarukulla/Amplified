@@ -1,12 +1,12 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
-import logging
+import structlog
 from app.dependencies import resume_parser, jd_analyzer, research_service
 from app.services.session_manager import session_manager
 from app.models import User
 from app.auth_dependencies import get_current_user
 
 router = APIRouter(prefix="/mock", tags=["mock"])
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 @router.post("/prepare")
 async def prepare_mock_interview(

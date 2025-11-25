@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from typing import Optional
-import logging
+import structlog
 
 from app.dependencies import document_service, research_service
 from app.services.session_manager import session_manager
@@ -8,7 +8,7 @@ from app.models import User
 from app.auth_dependencies import get_current_user
 
 router = APIRouter(prefix="/documents", tags=["documents"])
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 @router.post("/upload/document", deprecated=True) # Keeping old path for compatibility if needed, but maybe better to move to /documents/upload
 async def upload_document_legacy(

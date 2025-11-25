@@ -40,8 +40,8 @@ def test_update_action_status():
         if signup_response.status_code == 400:
             login_response = client.post(
                 "/api/auth/login",
-                data={
-                    "username": "test_action_update@example.com",
+                json={
+                    "email": "test_action_update@example.com",
                     "password": "testpass123"
                 }
             )

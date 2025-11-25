@@ -3,7 +3,7 @@ Document Analyzer Service - Orchestrates document analysis pipeline
 Handles file upload, text extraction, and coordinates 4-stage analysis
 """
 
-import logging
+import structlog
 import json
 import time
 from typing import Optional, List
@@ -20,7 +20,7 @@ from app.models import (
 from app.services.file_processing_service import FileProcessingService
 from app.services import analysis_engines
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # File size limits
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB

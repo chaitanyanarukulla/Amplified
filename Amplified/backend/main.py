@@ -7,7 +7,9 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import json
-import logging
+import json
+import structlog
+from app.core.logging import setup_logging
 from typing import Optional
 from datetime import datetime
 from contextlib import asynccontextmanager
@@ -25,11 +27,9 @@ from app.services.auth_service import decode_access_token
 from app.routers import documents, meetings, voice, interview, research, qa, test_gen, neural_engine, auth, doc_analyzer
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Configure logging
+setup_logging()
+logger = structlog.get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

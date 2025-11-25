@@ -28,8 +28,8 @@ def test_list_meetings_includes_relationships():
         # User might already exist, try login
         login_response = client.post(
             "/api/auth/login",
-            data={
-                "username": "test_meeting_history@example.com",
+            json={
+                "email": "test_meeting_history@example.com",
                 "password": "testpass123"
             }
         )
