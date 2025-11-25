@@ -24,3 +24,4 @@ passlib[bcrypt]
 python-jose[cryptography]
 weasyprint==60.1
 markdown==3.5.1
+pytest-cov

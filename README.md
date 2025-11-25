@@ -424,6 +424,20 @@ To keep the Electron + React frontend maintainable and responsive, several share
 
 ---
 
+## Testing
+
+To run the backend tests with coverage reporting:
+
+```bash
+cd Amplified/backend
+source venv/bin/activate
+pytest
+```
+
+This will output a coverage summary in the terminal and generate a detailed HTML report in `Amplified/backend/htmlcov/index.html`.
+
+---
+
 ## 🧰 Tech Stack
 
 * **Frontend**
