@@ -11,7 +11,6 @@ import MockInterviewPanel from './MockInterviewPanel';
 import MockInterviewSetup from './MockInterviewSetup';
 import MockInterviewBriefing from './MockInterviewBriefing';
 import MeetingAssistant from './MeetingAssistant';
-import CreateMeetingModal from './CreateMeetingModal';
 import InterviewAssistant from './InterviewAssistant';
 import TestGenDashboard from './TestGen/TestGenDashboard';
 import DocAnalyzer from './DocAnalyzer/DocAnalyzer';
@@ -58,7 +57,6 @@ export default function AppContent() {
     // Meeting Continuation State
     const [activeMeetingId, setActiveMeetingId] = useState(null);  // null = new meeting, otherwise continuing
     const [sessionNumber, setSessionNumber] = useState(1);
-    const [showCreateMeetingModal, setShowCreateMeetingModal] = useState(false);
 
     // Voice Profile State
     const [voiceProfile, setVoiceProfile] = useState(null);
@@ -318,7 +316,6 @@ export default function AppContent() {
             if (response.ok) {
                 const meeting = await response.json();
                 setActiveMeetingId(meeting.id);
-                setShowCreateMeetingModal(false);
 
                 // Clear state for new meeting
                 setTranscript([]);
@@ -347,11 +344,8 @@ export default function AppContent() {
             sendMessage({ type: 'command', action: 'stop_listening' });
             setIsListening(false);
         } else {
-            // If no active meeting ID, show modal to create new meeting
-            if (!activeMeetingId) {
-                setShowCreateMeetingModal(true);
-            } else {
-                // Continuing existing meeting
+            // Resume existing meeting
+            if (activeMeetingId) {
                 sendMessage({
                     type: 'command',
                     action: 'start_listening',
@@ -359,6 +353,7 @@ export default function AppContent() {
                 });
                 setIsListening(true);
             }
+            // For new meetings, the form's "Start Meeting" button will call handleCreateMeeting
         }
     }, [isListening, sendMessage, activeMeetingId]);
 
@@ -401,6 +396,8 @@ export default function AppContent() {
                         currentSuggestion={currentSuggestion}
                         onSuggest={handleSuggest}
                         onNavigateToHistory={() => setCurrentView('history')}
+                        onCreateMeeting={handleCreateMeeting}
+                        activeMeetingId={activeMeetingId}
                     />
                 );
 
@@ -593,12 +590,6 @@ export default function AppContent() {
             <MeetingSummaryModal
                 summary={meetingSummary}
                 onClose={() => setMeetingSummary(null)}
-            />
-
-            <CreateMeetingModal
-                isOpen={showCreateMeetingModal}
-                onClose={() => setShowCreateMeetingModal(false)}
-                onCreate={handleCreateMeeting}
             />
         </div>
     );

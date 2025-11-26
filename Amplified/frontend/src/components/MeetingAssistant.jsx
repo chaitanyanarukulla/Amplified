@@ -11,11 +11,18 @@ const MeetingAssistant = ({
     voiceProfile = null,
     currentSuggestion = null,
     onSuggest = () => { },
-    onNavigateToHistory = () => { }
+    onNavigateToHistory = () => { },
+    onCreateMeeting = () => { },  // New prop for creating meeting
+    activeMeetingId = null  // New prop to check if meeting exists
 }) => {
     const [activeTab, setActiveTab] = useState('notes'); // 'notes' or 'context'
     const [notes, setNotes] = useState(initialNotes);
     const [actionItems, setActionItems] = useState([]);
+
+    // Meeting creation form state
+    const [meetingTitle, setMeetingTitle] = useState('');
+    const [meetingPlatform, setMeetingPlatform] = useState('zoom');
+    const [meetingStartTime, setMeetingStartTime] = useState(new Date().toISOString().slice(0, 16));
 
     // Meeting Documents State
     const [uploadedDocs, setUploadedDocs] = useState([]);
@@ -87,25 +94,28 @@ const MeetingAssistant = ({
         setUploadedDocs(prev => prev.filter(d => d.id !== docId));
     };
 
+    const handleStartMeeting = () => {
+        if (!meetingTitle.trim()) {
+            alert('Please enter a meeting title');
+            return;
+        }
+
+        onCreateMeeting({
+            title: meetingTitle.trim(),
+            platform: meetingPlatform,
+            start_time: new Date(meetingStartTime).toISOString()
+        });
+    };
+
     return (
         <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white p-6 md:p-8">
             {/* Header */}
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-400">Meeting Assistant</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Real-time transcription & note-taking</p>
-                </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={onToggleListening}
-                        data-testid="btn-start-meeting"
-                        className={`px-5 py-2.5 rounded-lg font-medium transition-all duration-200 ${isListening
-                            ? 'bg-red-500/10 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/50 hover:bg-red-500/20'
-                            : 'bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/20'
-                            }`}
-                    >
-                        {isListening ? 'Pause Listening' : 'Start Meeting'}
-                    </button>
+            <div className="mb-8">
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-400">Meeting Assistant</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Real-time transcription & note-taking</p>
+                    </div>
                     <button
                         onClick={onNavigateToHistory}
                         className="px-5 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 transition-all duration-200 flex items-center gap-2"
@@ -116,25 +126,100 @@ const MeetingAssistant = ({
                         </svg>
                         History
                     </button>
-                    {isListening && (
-                        <>
-                            <button
-                                onClick={onSuggest}
-                                data-testid="btn-suggest-answer"
-                                className="px-5 py-2.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/50 hover:bg-amber-500/20 rounded-lg transition-all duration-200"
-                            >
-                                Suggest Answer
-                            </button>
-                            <button
-                                onClick={onEndMeeting}
-                                data-testid="btn-end-meeting"
-                                className="px-5 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 transition-all duration-200"
-                            >
-                                End & Summarize
-                            </button>
-                        </>
-                    )}
                 </div>
+
+                {/* Meeting Creation Form or Controls */}
+                {!activeMeetingId && !isListening ? (
+                    <div className="glass-card rounded-2xl p-6 border-blue-200 dark:border-blue-500/10">
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Create New Meeting</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            {/* Title */}
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    Meeting Title *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={meetingTitle}
+                                    onChange={(e) => setMeetingTitle(e.target.value)}
+                                    placeholder="e.g., Sprint Planning, Client Review"
+                                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+
+                            {/* Platform */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    Platform
+                                </label>
+                                <select
+                                    value={meetingPlatform}
+                                    onChange={(e) => setMeetingPlatform(e.target.value)}
+                                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="zoom">Zoom</option>
+                                    <option value="teams">Microsoft Teams</option>
+                                    <option value="meet">Google Meet</option>
+                                    <option value="webex">Webex</option>
+                                    <option value="in-person">In-Person</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            {/* Start Time */}
+                            <div className="md:col-span-3">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    Start Time
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={meetingStartTime}
+                                    onChange={(e) => setMeetingStartTime(e.target.value)}
+                                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleStartMeeting}
+                            data-testid="btn-start-meeting"
+                            className="w-full px-5 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-all duration-200 shadow-lg shadow-green-500/20"
+                        >
+                            Start Meeting
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onToggleListening}
+                            data-testid="btn-start-meeting"
+                            className={`px-5 py-2.5 rounded-lg font-medium transition-all duration-200 ${isListening
+                                ? 'bg-red-500/10 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/50 hover:bg-red-500/20'
+                                : 'bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-500/20'
+                                }`}
+                        >
+                            {isListening ? 'Pause Listening' : 'Resume Meeting'}
+                        </button>
+                        {isListening && (
+                            <>
+                                <button
+                                    onClick={onSuggest}
+                                    data-testid="btn-suggest-answer"
+                                    className="px-5 py-2.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/50 hover:bg-amber-500/20 rounded-lg transition-all duration-200"
+                                >
+                                    Suggest Answer
+                                </button>
+                                <button
+                                    onClick={onEndMeeting}
+                                    data-testid="btn-end-meeting"
+                                    className="px-5 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 transition-all duration-200"
+                                >
+                                    End & Summarize
+                                </button>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="flex gap-6 flex-1 overflow-hidden">
