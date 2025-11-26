@@ -59,28 +59,36 @@ class LLMService:
             context_str = self._build_context_string(context)
             
             # System Prompt
-            system_prompt = "You are a senior technical interviewer and communication coach. Your goal is to help candidates give authentic, high-impact answers based ONLY on their actual experience."
+            system_prompt = """You are an expert AI Interview Coach and Real-Time Prompter. Your goal is to help the candidate land the job by providing high-impact, authentic answers in real-time. 
+            
+            You must analyze their Resume and the Job Description to generate responses that bridge their actual experience with the role's requirements. 
+            
+            Your output must be structured for immediate reading (teleprompter style), focusing on STAR format, concrete metrics, and natural language."""
             
             # User Prompt
             user_prompt = f"""
 {context_str}
 
-Based on the provided context, generate a concise, professional answer to:
+Based on the provided context, generate a concise, high-impact answer to:
 Question: {question}
 
 Instructions:
-1. **Analyze Seniority**: Tailor the response to the candidate's level (e.g., Junior = learning/execution, Senior = system design/trade-offs).
-2. **Use STAR Method**: Structure the bullets as Context -> Action -> Result.
-3. **Be Authentic**: Use ONLY facts from the Resume. Do NOT invent projects.
-4. **Gap Handling**: If the resume lacks direct experience, suggest a pivot to a related skill or a "willingness to learn" angle.
+1. **Role Alignment**: Ensure the answer directly addresses the JD's key responsibilities and skills.
+2. **Resume Integration**: Explicitly cite projects, roles, or achievements from the candidate's resume. Do NOT hallucinate experience.
+3. **Implicit STAR Flow**: Structure the answer logically (Context -> Action -> Result) but do NOT use labels like "Situation:" or "Action:". Just tell the story naturally.
+4. **Detailed yet Scannable**: Provide rich detail to demonstrate expertise, but keep it easy to read live. Use clear, punchy sentences.
+5. **Metrics**: Emphasize numbers (e.g., "Improved latency by 20%", "Managed $500k budget").
+6. **Tone**: Natural, confident, and professional. Sound like the candidate, not a robot.
+7. **NO PLACEHOLDERS**: Never use "XYZ Corp", "Company Name", or generic fillers. If you lack specific details, generalize the experience (e.g., "In my previous role...") or ask the user for context.
 
 Output Format (JSON):
 {{
-    "title": "Punchy 5-8 word headline",
+    "title": "Punchy 5-8 word headline summarizing the key point",
     "bullets": [
-        "Context/Situation...",
-        "Action taken...",
-        "Result/Impact..."
+        "Start with the context/challenge (e.g., 'At [Company], we faced...')",
+        "Detail the specific actions and technical decisions YOU made...",
+        "Conclude with the impact and metrics (e.g., 'This resulted in...')",
+        "Add a closing thought or lesson learned if relevant..."
     ],
     "warning": "Optional: Pitfall to avoid or missing experience warning"
 }}
@@ -91,7 +99,7 @@ Output Format (JSON):
                 prompt=user_prompt,
                 system_prompt=system_prompt,
                 user_id=user_id,
-                max_tokens=800,
+                max_tokens=2048,  # Increased for detailed responses
                 temperature=0.7
             )
             

@@ -20,7 +20,7 @@ import Signup from './Signup';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useMockInterview } from '../hooks/useMockInterview';
 import { useAuth } from '../context/AuthContext';
-import { apiGet, apiPost } from '../utils/api';
+import { apiGet, apiPost, apiUpload } from '../utils/api';
 import { useGlobalShortcuts } from '../hooks/useGlobalShortcuts';
 import { useElectronWindow } from '../hooks/useElectronWindow';
 
@@ -372,6 +372,47 @@ export default function AppContent() {
     const updateInterviewState = useCallback((updates) => {
         setInterviewState(prev => ({ ...prev, ...updates }));
     }, []);
+
+    // Sync context (resume/JD) to backend when entering interview mode or reconnecting
+    // This ensures context is available even if backend restarted or session was lost
+    useEffect(() => {
+        const syncContext = async () => {
+            if (currentView === 'interview' && isConnected) {
+                const { resumeFile, jdFile } = interviewState;
+
+                // Use a flag to prevent double-uploading if just uploaded via ContextPanel
+                // But for now, redundancy ensures reliability
+
+                if (resumeFile) {
+                    console.log('Syncing resume to backend...');
+                    const formData = new FormData();
+                    formData.append('file', resumeFile);
+                    formData.append('type', 'resume');
+                    try {
+                        await apiUpload('/documents/upload/document', formData);
+                        console.log('Resume synced');
+                    } catch (e) {
+                        console.error('Failed to sync resume:', e);
+                    }
+                }
+
+                if (jdFile) {
+                    console.log('Syncing JD to backend...');
+                    const formData = new FormData();
+                    formData.append('file', jdFile);
+                    formData.append('type', 'job_description');
+                    try {
+                        await apiUpload('/documents/upload/document', formData);
+                        console.log('JD synced');
+                    } catch (e) {
+                        console.error('Failed to sync JD:', e);
+                    }
+                }
+            }
+        };
+
+        syncContext();
+    }, [currentView, isConnected, interviewState.resumeFile, interviewState.jdFile]);
 
     const toggleListening = useCallback(async () => {
         if (isListening) {

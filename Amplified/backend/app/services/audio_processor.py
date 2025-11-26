@@ -102,36 +102,40 @@ class AudioProcessor:
                 wpm = 0
                 
                 # 1. WPM Calculation
-                # Calculate word count - prefer 'words' array but fallback to splitting transcript
-                word_count = len(words) if words else len(sentence.split())
-                logger.info(f"[Coaching] Calculated word_count={word_count}")
-                
-                if word_count > 0:
-                    # Add current word count to history
-                    self.word_history.append((current_time, word_count))
-                    logger.info(f"[Coaching] Updated word_history length={len(self.word_history)}")
+                try:
+                    # Calculate word count - prefer 'words' array but fallback to splitting transcript
+                    word_count = len(words) if words else len(sentence.split())
+                    logger.info(f"[Coaching] Calculated word_count={word_count}")
                     
-                    # Remove entries older than 10 seconds
-                    while self.word_history and (current_time - self.word_history[0][0]).total_seconds() > 10:
-                        self.word_history.popleft()
-                    
-                    # Calculate WPM
-                    total_words = sum(count for _, count in self.word_history)
-                    # Avoid division by zero, default to small window if history is short
-                    window_seconds = 10
-                    if self.word_history:
-                        oldest_time = self.word_history[0][0]
-                        time_diff = (current_time - oldest_time).total_seconds()
-                        if time_diff > 1:
-                            window_seconds = time_diff
-                    
-                    wpm = int((total_words / window_seconds) * 60)
-                    # Fallback: if wpm is zero (e.g., very short window), estimate using current fragment word count
-                    if wpm == 0 and word_count > 0:
-                        # Approximate: assume 10-second window, so multiply by 6 to get per minute
-                        wpm = int(word_count * 6)
-                    logger.info(f"[Coaching] word_count={word_count}, total_words={total_words}, window_seconds={window_seconds}, wpm={wpm}")
-                else:
+                    if word_count > 0:
+                        # Add current word count to history
+                        self.word_history.append((current_time, word_count))
+                        logger.info(f"[Coaching] Updated word_history length={len(self.word_history)}")
+                        
+                        # Remove entries older than 10 seconds
+                        while self.word_history and (current_time - self.word_history[0][0]).total_seconds() > 10:
+                            self.word_history.popleft()
+                        
+                        # Calculate WPM
+                        total_words = sum(count for _, count in self.word_history)
+                        # Avoid division by zero, default to small window if history is short
+                        window_seconds = 10
+                        if self.word_history:
+                            oldest_time = self.word_history[0][0]
+                            time_diff = (current_time - oldest_time).total_seconds()
+                            if time_diff > 1:
+                                window_seconds = time_diff
+                        
+                        wpm = int((total_words / window_seconds) * 60)
+                        # Fallback: if wpm is zero (e.g., very short window), estimate using current fragment word count
+                        if wpm == 0 and word_count > 0:
+                            # Approximate: assume 10-second window, so multiply by 6 to get per minute
+                            wpm = int(word_count * 6)
+                        logger.info(f"[Coaching] word_count={word_count}, total_words={total_words}, window_seconds={window_seconds}, wpm={wpm}")
+                    else:
+                        wpm = 0
+                except Exception as e:
+                    logger.error(f"Error calculating WPM: {e}")
                     wpm = 0
                     
                 # 2. Filler Word Detection

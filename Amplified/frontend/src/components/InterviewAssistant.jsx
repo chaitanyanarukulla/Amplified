@@ -27,6 +27,13 @@ const InterviewAssistant = ({
             <div className="flex-1 bg-slate-900/60 backdrop-blur-sm flex flex-col overflow-hidden">
                 <Transcript transcript={transcript} />
 
+                <div className="flex-1 overflow-y-auto">
+                    <AnswerCard
+                        suggestion={currentSuggestion}
+                        onClose={() => setCurrentSuggestion(null)}
+                    />
+                </div>
+
                 {/* Coaching Widget - Only show when listening */}
                 {isListening && (
                     <CoachingWidget
@@ -34,13 +41,6 @@ const InterviewAssistant = ({
                         fillerCount={coachingMetrics.fillerCount}
                     />
                 )}
-
-                <div className="flex-1 overflow-y-auto">
-                    <AnswerCard
-                        suggestion={currentSuggestion}
-                        onClose={() => setCurrentSuggestion(null)}
-                    />
-                </div>
             </div>
 
             {/* Context Panel Column */}
