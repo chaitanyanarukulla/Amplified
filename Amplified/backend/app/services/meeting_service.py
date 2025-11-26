@@ -260,8 +260,11 @@ Previous Sessions Summary:
                     "status": action.status
                 })
         
-        # 6. Index meeting summary in vector store for RAG
-        await self._index_meeting_summary(meeting_id, user_id, short_summary, detailed_summary, action_dicts)
+        # 6. Index meeting summary in vector store for RAG (run in background)
+        import asyncio
+        asyncio.create_task(
+            self._index_meeting_summary(meeting_id, user_id, short_summary, detailed_summary, action_dicts)
+        )
         
         # Return a dict-based summary that can be used outside the session
         return {
