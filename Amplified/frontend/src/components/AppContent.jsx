@@ -92,7 +92,7 @@ export default function AppContent() {
         setError(null);
 
         // 1. Find the last question from the transcript
-        let lastQuestion = "Tell me about yourself."; // Default
+        let lastQuestion = "What should I say?"; // Default
 
         const interviewerLines = transcript.filter(t => t.speaker !== 'You');
         if (interviewerLines.length > 0) {
@@ -100,14 +100,26 @@ export default function AppContent() {
         }
 
         try {
-            const response = await apiPost('/qa/meeting', {
-                question: lastQuestion,
-                context_window_seconds: 60
+            // Use the meeting-specific AI assistant endpoint
+            if (!activeMeetingId) {
+                setError("No active meeting. Please start a meeting first.");
+                setIsProcessing(false);
+                return;
+            }
+
+            const response = await apiPost(`/meetings/${activeMeetingId}/ask`, {
+                question: lastQuestion
             });
 
             if (response.ok) {
-                const suggestion = await response.json();
-                setCurrentSuggestion(suggestion);
+                const result = await response.json();
+                // Format the response for display
+                setCurrentSuggestion({
+                    title: "AI Suggestion",
+                    answer: result.answer,
+                    extra_points: result.related_documents?.map(d => d.snippet.substring(0, 100)) || [],
+                    sources: result.related_documents || []
+                });
             } else {
                 console.error("Failed to get suggestion");
                 setError("Failed to get suggestion. Please try again.");
@@ -118,7 +130,7 @@ export default function AppContent() {
         } finally {
             setIsProcessing(false);
         }
-    }, [transcript]);
+    }, [transcript, activeMeetingId]);
 
 
     // Handle incoming messages
