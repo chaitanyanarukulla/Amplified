@@ -126,18 +126,52 @@ const KnowledgeVault = ({ onBack }) => {
         }
     };
 
-    const handleDelete = async (docId) => {
-        if (!window.confirm('Are you sure you want to delete this document?')) return;
+    const handleDelete = async (entityId, entityType) => {
+        const entityNames = {
+            'document': 'document',
+            'meeting': 'meeting',
+            'test_case': 'test suite'
+        };
+
+        if (!window.confirm(`Are you sure you want to delete this ${entityNames[entityType]}? This will remove it from everywhere including the knowledge base.`)) return;
 
         try {
-            const response = await apiDelete(`/documents/${docId}`);
+            let response;
 
-            if (response.ok) {
-                setDocuments(documents.filter(d => d.id !== docId));
+            // Call appropriate delete endpoint based on entity type
+            switch (entityType) {
+                case 'document':
+                    response = await apiDelete(`/documents/${entityId}`);
+                    if (response.ok) {
+                        setDocuments(documents.filter(d => d.id !== entityId));
+                    }
+                    break;
+                case 'meeting':
+                    response = await apiDelete(`/meetings/${entityId}`);
+                    if (response.ok) {
+                        setMeetings(meetings.filter(m => m.id !== entityId));
+                    }
+                    break;
+                case 'test_case':
+                    response = await apiDelete(`/test-gen/${entityId}`);
+                    if (response.ok) {
+                        setTestCases(testCases.filter(tc => tc.id !== entityId));
+                    }
+                    break;
+                default:
+                    console.error('Unknown entity type:', entityType);
+                    return;
+            }
+
+            if (response && response.ok) {
                 await fetchStats(); // Refresh stats
+                alert(`${entityNames[entityType]} deleted successfully`);
+            } else {
+                alert(`Failed to delete ${entityNames[entityType]}`);
             }
         } catch (error) {
             console.error('Delete failed:', error);
+            alert('Error deleting item');
         }
     };
 
@@ -356,17 +390,19 @@ const KnowledgeVault = ({ onBack }) => {
                                             </div>
                                         </div>
 
-                                        {doc.type === 'document' && (
-                                            <button
-                                                onClick={() => handleDelete(doc.id)}
-                                                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                                title="Delete Document"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        )}
+                                        {/* Delete Button - Show for all entity types */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevent opening detail modal
+                                                handleDelete(doc.id, doc.type);
+                                            }}
+                                            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                            title={`Delete ${doc.type.replace('_', ' ')}`}
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 ))
                             );
