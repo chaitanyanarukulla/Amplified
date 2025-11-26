@@ -17,7 +17,7 @@ pypdf
 chromadb
 pytest
 pytest-asyncio
-duckduckgo-search
+ddgs
 cryptography
 pandas
 passlib[bcrypt]

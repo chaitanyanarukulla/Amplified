@@ -1,6 +1,6 @@
 import structlog
 import re
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 logger = structlog.get_logger(__name__)
 
