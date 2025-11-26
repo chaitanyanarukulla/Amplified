@@ -15,7 +15,9 @@ const InterviewAssistant = ({
     currentSuggestion,
     setCurrentSuggestion,
     clickThrough,
-    setClickThrough
+    setClickThrough,
+    interviewState,
+    updateInterviewState
 }) => {
     return (
         <div className="flex-1 flex flex-row overflow-hidden relative"
@@ -47,6 +49,8 @@ const InterviewAssistant = ({
                 onClose={() => setIsContextPanelOpen(false)}
                 onUpdateNotes={handleUpdateNotes}
                 initialNotes={notes}
+                interviewState={interviewState}
+                updateInterviewState={updateInterviewState}
             />
         </div>
     );

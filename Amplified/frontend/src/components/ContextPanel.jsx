@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { apiUpload } from '../utils/api';
 
-const ContextPanel = ({ onUpdateNotes, isOpen, onClose, initialNotes = '' }) => {
-    const [resumeFile, setResumeFile] = useState(null);
-    const [jdFile, setJdFile] = useState(null);
+const ContextPanel = ({
+    onUpdateNotes,
+    isOpen,
+    onClose,
+    initialNotes = '',
+    interviewState,
+    updateInterviewState
+}) => {
+    // Use persistent state from props, with fallbacks for safety
+    const {
+        resumeFile = null,
+        jdFile = null,
+        targetRole = '',
+        uploadStatus = { resume: 'idle', jd: 'idle' },
+        roleResearchStatus = 'idle',
+        expandedSections = { company: true, role: true }
+    } = interviewState || {};
+
     const [notes, setNotes] = useState('');
-    const [targetRole, setTargetRole] = useState('');
-    const [uploadStatus, setUploadStatus] = useState({ resume: 'idle', jd: 'idle' }); // idle, uploading, success, error
-    const [roleResearchStatus, setRoleResearchStatus] = useState('idle'); // idle, researching, success, error
-    const [expandedSections, setExpandedSections] = useState({ company: true, role: true });
 
     // Update local notes when initialNotes changes (from backend)
     useEffect(() => {
@@ -55,15 +66,22 @@ const ContextPanel = ({ onUpdateNotes, isOpen, onClose, initialNotes = '' }) => 
     };
 
     const toggleSection = (section) => {
-        setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+        if (updateInterviewState) {
+            updateInterviewState({
+                expandedSections: { ...expandedSections, [section]: !expandedSections[section] }
+            });
+        }
     };
 
     const sections = parseResearch(notes);
 
     const handleFileUpload = async (file, type) => {
-        if (!file) return;
+        if (!file || !updateInterviewState) return;
 
-        setUploadStatus(prev => ({ ...prev, [type]: 'uploading' }));
+        updateInterviewState({
+            uploadStatus: { ...uploadStatus, [type]: 'uploading' }
+        });
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', type === 'resume' ? 'resume' : 'job_description');
@@ -72,22 +90,27 @@ const ContextPanel = ({ onUpdateNotes, isOpen, onClose, initialNotes = '' }) => 
             const response = await apiUpload('/documents/upload/document', formData);
 
             if (response.ok) {
-                setUploadStatus(prev => ({ ...prev, [type]: 'success' }));
-                if (type === 'resume') setResumeFile(file);
-                else setJdFile(file);
+                updateInterviewState({
+                    uploadStatus: { ...uploadStatus, [type]: 'success' },
+                    [type === 'resume' ? 'resumeFile' : 'jdFile']: file
+                });
             } else {
-                setUploadStatus(prev => ({ ...prev, [type]: 'error' }));
+                updateInterviewState({
+                    uploadStatus: { ...uploadStatus, [type]: 'error' }
+                });
             }
         } catch (error) {
             console.error('Upload failed:', error);
-            setUploadStatus(prev => ({ ...prev, [type]: 'error' }));
+            updateInterviewState({
+                uploadStatus: { ...uploadStatus, [type]: 'error' }
+            });
         }
     };
 
     const handleRoleResearch = async () => {
-        if (!targetRole.trim()) return;
+        if (!targetRole.trim() || !updateInterviewState) return;
 
-        setRoleResearchStatus('researching');
+        updateInterviewState({ roleResearchStatus: 'researching' });
         const formData = new FormData();
         formData.append('role_title', targetRole);
 
@@ -95,14 +118,14 @@ const ContextPanel = ({ onUpdateNotes, isOpen, onClose, initialNotes = '' }) => 
             const response = await apiUpload('/research/role', formData);
 
             if (response.ok) {
-                setRoleResearchStatus('success');
+                updateInterviewState({ roleResearchStatus: 'success' });
                 // Notes will update via WebSocket
             } else {
-                setRoleResearchStatus('error');
+                updateInterviewState({ roleResearchStatus: 'error' });
             }
         } catch (error) {
             console.error('Role research failed:', error);
-            setRoleResearchStatus('error');
+            updateInterviewState({ roleResearchStatus: 'error' });
         }
     };
 
@@ -197,7 +220,7 @@ const ContextPanel = ({ onUpdateNotes, isOpen, onClose, initialNotes = '' }) => 
                         <input
                             type="text"
                             value={targetRole}
-                            onChange={(e) => setTargetRole(e.target.value)}
+                            onChange={(e) => updateInterviewState && updateInterviewState({ targetRole: e.target.value })}
                             placeholder="e.g., Senior QA Engineer"
                             className="flex-1 bg-white/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                             onKeyPress={(e) => e.key === 'Enter' && handleRoleResearch()}

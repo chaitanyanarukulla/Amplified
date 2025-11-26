@@ -359,7 +359,21 @@ export default function AppContent() {
         }
     }, [sendMessage]);
 
-    const toggleListening = useCallback(() => {
+    // Interview Mode State (Persistent)
+    const [interviewState, setInterviewState] = useState({
+        resumeFile: null,
+        jdFile: null,
+        targetRole: '',
+        uploadStatus: { resume: 'idle', jd: 'idle' },
+        roleResearchStatus: 'idle',
+        expandedSections: { company: true, role: true }
+    });
+
+    const updateInterviewState = useCallback((updates) => {
+        setInterviewState(prev => ({ ...prev, ...updates }));
+    }, []);
+
+    const toggleListening = useCallback(async () => {
         if (isListening) {
             sendMessage({ type: 'command', action: 'stop_listening' });
             setIsListening(false);
@@ -372,10 +386,45 @@ export default function AppContent() {
                     payload: { meeting_id: activeMeetingId }
                 });
                 setIsListening(true);
+            } else if (currentView === 'interview') {
+                // Auto-create meeting for Interview Assistant if none exists
+                try {
+                    const meetingData = {
+                        title: `Interview Session - ${new Date().toLocaleString()}`,
+                        platform: 'Interview Assistant',
+                        start_time: new Date().toISOString()
+                    };
+
+                    const response = await apiPost('/meetings', meetingData);
+                    if (response.ok) {
+                        const meeting = await response.json();
+                        setActiveMeetingId(meeting.id);
+
+                        // Clear state for new meeting
+                        setTranscript([]);
+                        // Don't clear notes in interview mode as they might be pre-loaded context
+                        setMeetingSummary(null);
+                        setSessionNumber(1);
+
+                        // Start listening with the new meeting ID
+                        sendMessage({
+                            type: 'command',
+                            action: 'start_listening',
+                            payload: { meeting_id: meeting.id }
+                        });
+                        setIsListening(true);
+                    } else {
+                        console.error('Failed to create interview session');
+                        setError('Failed to start interview session');
+                    }
+                } catch (error) {
+                    console.error('Error creating interview session:', error);
+                    setError('Error starting interview session');
+                }
             }
-            // For new meetings, the form's "Start Meeting" button will call handleCreateMeeting
+            // For new meetings in Meeting Assistant, the form's "Start Meeting" button will call handleCreateMeeting
         }
-    }, [isListening, sendMessage, activeMeetingId]);
+    }, [isListening, sendMessage, activeMeetingId, currentView]);
 
     const handleEndMeeting = useCallback(() => {
         if (window.confirm("Are you sure you want to end the meeting? This will generate a summary.")) {
@@ -471,6 +520,8 @@ export default function AppContent() {
                         setCurrentSuggestion={setCurrentSuggestion}
                         clickThrough={clickThrough}
                         setClickThrough={setClickThrough}
+                        interviewState={interviewState}
+                        updateInterviewState={updateInterviewState}
                     />
                 );
 
