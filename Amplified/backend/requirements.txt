@@ -26,3 +26,4 @@ weasyprint==60.1
 markdown==3.5.1
 pytest-cov
 structlog==24.1.0
+atlassian-python-api
