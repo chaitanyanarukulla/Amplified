@@ -3,9 +3,12 @@ import { apiGet, apiPost, apiUpload, apiDelete } from '../utils/api';
 
 const KnowledgeVault = ({ onBack }) => {
     const [documents, setDocuments] = useState([]);
+    const [meetings, setMeetings] = useState([]);
+    const [testCases, setTestCases] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [uploading, setUploading] = useState(false);
+    const [activeTab, setActiveTab] = useState('all'); // 'all', 'documents', 'meetings', 'test_cases'
 
     // New state for AI features
     const [showChat, setShowChat] = useState(false);
@@ -15,20 +18,35 @@ const KnowledgeVault = ({ onBack }) => {
     const [stats, setStats] = useState(null);
 
     useEffect(() => {
-        fetchDocuments();
+        fetchAllEntities();
         fetchStats();
     }, []);
 
-    const fetchDocuments = async () => {
+    const fetchAllEntities = async () => {
         setIsLoading(true);
         try {
-            const response = await apiGet('/documents');
-            if (response.ok) {
-                const data = await response.json();
-                setDocuments(data);
+            // Fetch documents
+            const docsResponse = await apiGet('/documents');
+            if (docsResponse.ok) {
+                const docsData = await docsResponse.json();
+                setDocuments(docsData);
+            }
+
+            // Fetch meetings
+            const meetingsResponse = await apiGet('/meetings');
+            if (meetingsResponse.ok) {
+                const meetingsData = await meetingsResponse.json();
+                setMeetings(meetingsData);
+            }
+
+            // Fetch test cases
+            const testCasesResponse = await apiGet('/test-gen/history');
+            if (testCasesResponse.ok) {
+                const testCasesData = await testCasesResponse.json();
+                setTestCases(testCasesData);
             }
         } catch (error) {
-            console.error('Failed to fetch documents:', error);
+            console.error('Failed to fetch entities:', error);
         } finally {
             setIsLoading(false);
         }
@@ -264,73 +282,134 @@ const KnowledgeVault = ({ onBack }) => {
                         </div>
                     </form>
 
-                    {/* Document List */}
+                    {/* Tabs */}
+                    <div className="flex gap-2 mb-4 border-b border-slate-700">
+                        <button
+                            onClick={() => setActiveTab('all')}
+                            className={`px-4 py-2 font-medium transition-colors ${activeTab === 'all'
+                                ? 'text-purple-400 border-b-2 border-purple-400'
+                                : 'text-slate-400 hover:text-slate-300'
+                                }`}
+                        >
+                            All ({documents.length + meetings.length + testCases.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('documents')}
+                            className={`px-4 py-2 font-medium transition-colors ${activeTab === 'documents'
+                                ? 'text-purple-400 border-b-2 border-purple-400'
+                                : 'text-slate-400 hover:text-slate-300'
+                                }`}
+                        >
+                            Documents ({documents.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('meetings')}
+                            className={`px-4 py-2 font-medium transition-colors ${activeTab === 'meetings'
+                                ? 'text-purple-400 border-b-2 border-purple-400'
+                                : 'text-slate-400 hover:text-slate-300'
+                                }`}
+                        >
+                            Meetings ({meetings.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('test_cases')}
+                            className={`px-4 py-2 font-medium transition-colors ${activeTab === 'test_cases'
+                                ? 'text-purple-400 border-b-2 border-purple-400'
+                                : 'text-slate-400 hover:text-slate-300'
+                                }`}
+                        >
+                            Test Cases ({testCases.length})
+                        </button>
+                    </div>
+
+                    {/* Entity List */}
                     <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar" data-testid="documents-list">
                         {isLoading ? (
                             <div className="flex justify-center py-10">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
                             </div>
-                        ) : documents.length === 0 ? (
-                            <div className="text-center py-10 text-slate-500">
-                                <p className="text-lg">No documents found.</p>
-                                <p className="text-sm">Upload a PDF or DOCX to get started.</p>
-                            </div>
-                        ) : (
-                            documents.map((doc) => (
-                                <div
-                                    key={doc.id}
-                                    className="group flex items-center justify-between p-4 bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/50 hover:border-purple-500/30 rounded-xl transition-all duration-200"
-                                >
-                                    <div className="flex items-center gap-4 overflow-hidden flex-1">
-                                        <div className="p-3 bg-slate-700/50 rounded-lg text-purple-400">
-                                            {doc.type === 'meeting' ? (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
-                                            ) : doc.type === 'test_case' ? (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                                </svg>
-                                            ) : (
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                            )}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="font-medium text-slate-200 truncate">{doc.name}</h3>
-                                                {doc.relevance && (
-                                                    <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs font-medium">
-                                                        {doc.relevance}% match
-                                                    </span>
+                        ) : (() => {
+                            // Combine and filter entities based on active tab
+                            const allEntities = [
+                                ...documents.map(d => ({ ...d, type: 'document', name: d.filename || d.name })),
+                                ...meetings.map(m => ({ ...m, type: 'meeting', name: m.title })),
+                                ...testCases.map(tc => ({ ...tc, type: 'test_case', name: `Test Suite: ${tc.jira_ticket || tc.id}` }))
+                            ];
+
+                            const filteredEntities = activeTab === 'all'
+                                ? allEntities
+                                : allEntities.filter(e => e.type === activeTab || (activeTab === 'test_cases' && e.type === 'test_case'));
+
+                            // Sort by created_at descending
+                            filteredEntities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                            return filteredEntities.length === 0 ? (
+                                <div className="text-center py-10 text-slate-500">
+                                    <p className="text-lg">No {activeTab === 'all' ? 'items' : activeTab.replace('_', ' ')} found.</p>
+                                    <p className="text-sm">
+                                        {activeTab === 'documents' && 'Upload a PDF or DOCX to get started.'}
+                                        {activeTab === 'meetings' && 'Start a meeting to see it here.'}
+                                        {activeTab === 'test_cases' && 'Generate test cases to see them here.'}
+                                        {activeTab === 'all' && 'Upload documents, hold meetings, or generate test cases to build your knowledge base.'}
+                                    </p>
+                                </div>
+                            ) : (
+                                filteredEntities.map((doc) => (
+                                    <div
+                                        key={`${doc.type}-${doc.id}`}
+                                        className="group flex items-center justify-between p-4 bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/50 hover:border-purple-500/30 rounded-xl transition-all duration-200"
+                                    >
+                                        <div className="flex items-center gap-4 overflow-hidden flex-1">
+                                            <div className="p-3 bg-slate-700/50 rounded-lg text-purple-400">
+                                                {doc.type === 'meeting' ? (
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
+                                                ) : doc.type === 'test_case' ? (
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                                    </svg>
+                                                ) : (
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs text-slate-400">
-                                                <span className="capitalize">{doc.type}</span>
-                                                <span>•</span>
-                                                <span>{new Date(doc.created_at).toLocaleDateString()}</span>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="font-medium text-slate-200 truncate">{doc.name}</h3>
+                                                    {doc.relevance && (
+                                                        <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs font-medium">
+                                                            {doc.relevance}% match
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-slate-400">
+                                                    <span className="capitalize">{doc.type}</span>
+                                                    <span>•</span>
+                                                    <span>{new Date(doc.created_at).toLocaleDateString()}</span>
+                                                </div>
+                                                {doc.snippet && (
+                                                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{doc.snippet}</p>
+                                                )}
                                             </div>
-                                            {doc.snippet && (
-                                                <p className="text-xs text-slate-500 mt-1 line-clamp-2">{doc.snippet}</p>
-                                            )}
                                         </div>
-                                    </div>
 
-                                    {doc.type === 'document' && (
-                                        <button
-                                            onClick={() => handleDelete(doc.id)}
-                                            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                            title="Delete Document"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    )}
-                                </div>
-                            ))
-                        )}
+                                        {doc.type === 'document' && (
+                                            <button
+                                                onClick={() => handleDelete(doc.id)}
+                                                className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                title="Delete Document"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
+                                ))
+                            );
+                        })()}
                     </div>
                 </div>
 
