@@ -6,7 +6,6 @@ const KnowledgeVault = ({ onBack }) => {
     const [meetings, setMeetings] = useState([]);
     const [testCases, setTestCases] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [uploading, setUploading] = useState(false);
     const [activeTab, setActiveTab] = useState('all'); // 'all', 'documents', 'meetings', 'test_cases'
 
@@ -62,53 +61,6 @@ const KnowledgeVault = ({ onBack }) => {
             }
         } catch (error) {
             console.error('Failed to fetch stats:', error);
-        }
-    };
-
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) {
-            fetchDocuments();
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            // Use new semantic search endpoint
-            const response = await apiGet(`/knowledge/search?q=${encodeURIComponent(searchQuery)}&limit=20`);
-
-            if (response.ok) {
-                const data = await response.json();
-
-
-                // Group by entity_id and keep the best match
-                const uniqueResults = new Map();
-
-                data.results.forEach(r => {
-                    const existing = uniqueResults.get(r.entity_id);
-                    if (!existing || r.relevance_score > existing.relevance_score) {
-                        uniqueResults.set(r.entity_id, r);
-                    }
-                });
-
-                // Convert back to array and map to display format
-                const formattedDocs = Array.from(uniqueResults.values())
-                    .sort((a, b) => b.relevance_score - a.relevance_score)
-                    .map(r => ({
-                        id: r.entity_id,
-                        name: r.metadata.filename || r.metadata.meeting_title || r.metadata.jira_ticket || 'Unknown',
-                        type: r.entity_type,
-                        snippet: r.content.substring(0, 200),
-                        created_at: new Date().toISOString(),
-                        relevance: (r.relevance_score * 100).toFixed(0)
-                    }));
-
-                setDocuments(formattedDocs);
-            }
-        } catch (error) {
-            console.error('Search failed:', error);
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -267,21 +219,28 @@ const KnowledgeVault = ({ onBack }) => {
             <div className="flex gap-6 flex-1 overflow-hidden">
                 {/* Main Content */}
                 <div className={`flex flex-col ${showChat ? 'w-2/3' : 'w-full'} transition-all`}>
-                    {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="mb-6">
+                    {/* AI Chat Bar */}
+                    <div className="mb-6">
                         <div className="relative">
                             <input
                                 type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Ask a question or search your knowledge..."
-                                className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 px-4 pl-12 text-slate-200 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                                value={chatQuestion}
+                                onChange={(e) => setChatQuestion(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && !isAsking && chatQuestion.trim() && handleAskQuestion()}
+                                placeholder="Ask AI what you're looking for..."
+                                className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-4 px-6 pl-14 text-slate-200 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-lg"
+                                disabled={isAsking}
                             />
-                            <svg className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            <svg className="w-6 h-6 text-purple-400 absolute left-5 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                             </svg>
+                            {isAsking && (
+                                <div className="absolute right-5 top-4">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+                                </div>
+                            )}
                         </div>
-                    </form>
+                    </div>
 
                     {/* Tabs */}
                     <div className="flex gap-2 mb-4 border-b border-slate-700">
@@ -527,49 +486,75 @@ const KnowledgeVault = ({ onBack }) => {
                         {/* Modal Content */}
                         <div className="flex-1 overflow-y-auto p-6">
                             {selectedEntity.type === 'document' && (
-                                <div>
-                                    <div className="mb-4">
-                                        <h3 className="text-sm font-semibold text-slate-400 mb-2">Document Type</h3>
-                                        <p className="text-slate-200 capitalize">{selectedEntity.type}</p>
-                                    </div>
-                                    {selectedEntity.extracted_text && (
+                                <div className="space-y-4">
+                                    {selectedEntity.type && (
                                         <div>
-                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Content</h3>
-                                            <div className="bg-slate-900/50 rounded-lg p-4 text-slate-300 whitespace-pre-wrap max-h-96 overflow-y-auto">
-                                                {selectedEntity.extracted_text}
-                                            </div>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Document Type</h3>
+                                            <p className="text-slate-200 capitalize">{selectedEntity.doc_type || selectedEntity.type}</p>
                                         </div>
                                     )}
+                                    {selectedEntity.tags && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Tags</h3>
+                                            <p className="text-slate-200">{selectedEntity.tags}</p>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-slate-400 mb-2">Full Content</h3>
+                                        <div className="bg-slate-900/50 rounded-lg p-4 text-slate-300 whitespace-pre-wrap max-h-[500px] overflow-y-auto">
+                                            {selectedEntity.extracted_text || selectedEntity.content || 'No content available'}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
                             {selectedEntity.type === 'meeting' && (
                                 <div className="space-y-6">
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-slate-400 mb-2">Platform</h3>
-                                        <p className="text-slate-200 capitalize">{selectedEntity.platform || 'Not specified'}</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Platform</h3>
+                                            <p className="text-slate-200 capitalize">{selectedEntity.platform || 'Not specified'}</p>
+                                        </div>
+                                        {selectedEntity.start_time && (
+                                            <div>
+                                                <h3 className="text-sm font-semibold text-slate-400 mb-2">Start Time</h3>
+                                                <p className="text-slate-200">{new Date(selectedEntity.start_time).toLocaleString()}</p>
+                                            </div>
+                                        )}
                                     </div>
+
                                     {selectedEntity.summaries && selectedEntity.summaries.length > 0 && (
                                         <div>
-                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Summary</h3>
-                                            <div className="bg-slate-900/50 rounded-lg p-4 text-slate-300">
-                                                <p className="mb-3">{selectedEntity.summaries[0].short_summary}</p>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-3">Summary</h3>
+                                            <div className="bg-slate-900/50 rounded-lg p-4 space-y-3">
+                                                {selectedEntity.summaries[0].short_summary && (
+                                                    <div>
+                                                        <h4 className="text-purple-400 font-medium mb-2">Overview</h4>
+                                                        <p className="text-slate-300">{selectedEntity.summaries[0].short_summary}</p>
+                                                    </div>
+                                                )}
                                                 {selectedEntity.summaries[0].detailed_summary && (
-                                                    <p className="text-sm text-slate-400">{selectedEntity.summaries[0].detailed_summary}</p>
+                                                    <div>
+                                                        <h4 className="text-purple-400 font-medium mb-2">Details</h4>
+                                                        <p className="text-slate-300 whitespace-pre-wrap">{selectedEntity.summaries[0].detailed_summary}</p>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
                                     )}
+
                                     {selectedEntity.actions && selectedEntity.actions.length > 0 && (
                                         <div>
-                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Action Items</h3>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-3">Action Items ({selectedEntity.actions.length})</h3>
                                             <div className="space-y-2">
                                                 {selectedEntity.actions.map((action, idx) => (
-                                                    <div key={idx} className="bg-slate-900/50 rounded-lg p-3">
-                                                        <p className="text-slate-200">{action.description}</p>
-                                                        {action.owner && (
-                                                            <p className="text-sm text-slate-400 mt-1">Owner: {action.owner}</p>
-                                                        )}
+                                                    <div key={idx} className="bg-slate-900/50 rounded-lg p-4 border-l-4 border-purple-500">
+                                                        <p className="text-slate-200 font-medium">{action.description}</p>
+                                                        <div className="flex gap-4 mt-2 text-sm text-slate-400">
+                                                            {action.owner && <span>👤 {action.owner}</span>}
+                                                            {action.status && <span className="capitalize">Status: {action.status}</span>}
+                                                            {action.due_date && <span>📅 {new Date(action.due_date).toLocaleDateString()}</span>}
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -583,14 +568,18 @@ const KnowledgeVault = ({ onBack }) => {
                                     {selectedEntity.jira_ticket && (
                                         <div>
                                             <h3 className="text-sm font-semibold text-slate-400 mb-2">Jira Ticket</h3>
-                                            <p className="text-slate-200">{selectedEntity.jira_ticket}</p>
+                                            <p className="text-slate-200 font-mono text-lg">{selectedEntity.jira_ticket}</p>
                                         </div>
                                     )}
                                     {selectedEntity.test_cases && (
                                         <div>
-                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Test Cases</h3>
-                                            <div className="bg-slate-900/50 rounded-lg p-4 text-slate-300 whitespace-pre-wrap max-h-96 overflow-y-auto">
-                                                {JSON.stringify(selectedEntity.test_cases, null, 2)}
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-3">Generated Test Cases</h3>
+                                            <div className="bg-slate-900/50 rounded-lg p-4 max-h-[500px] overflow-y-auto">
+                                                {typeof selectedEntity.test_cases === 'string' ? (
+                                                    <pre className="text-slate-300 whitespace-pre-wrap text-sm">{selectedEntity.test_cases}</pre>
+                                                ) : (
+                                                    <pre className="text-slate-300 whitespace-pre-wrap text-sm">{JSON.stringify(selectedEntity.test_cases, null, 2)}</pre>
+                                                )}
                                             </div>
                                         </div>
                                     )}
