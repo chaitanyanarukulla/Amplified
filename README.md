@@ -9,19 +9,14 @@
 
 ----
 
-**Amplified** – *Amplify your work*
-
-- Meeting productivity  
-- Document and design review  
-- Test case generation  
-- Interview Assistant
-- Mock interview preparation  
+**Amplified** – *Amplify your work
 
 It combines real-time transcription, intelligent summaries, action item tracking, and context-aware assistance across several modes:
 
 - **Meeting Assistant**  
 - **Test Generator**  
-- **Document / Design Reviewer**  
+- **Document / Design Reviewer**
+- **Test Plan Genator
 - **Interview Assistant (Stealth Mode)** 
 - **Mock Interview Assistant** 
 
