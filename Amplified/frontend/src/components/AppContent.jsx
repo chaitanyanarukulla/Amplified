@@ -11,6 +11,7 @@ import MockInterviewPanel from './MockInterviewPanel';
 import MockInterviewSetup from './MockInterviewSetup';
 import MockInterviewBriefing from './MockInterviewBriefing';
 import MeetingAssistant from './MeetingAssistant';
+import CreateMeetingModal from './CreateMeetingModal';
 import InterviewAssistant from './InterviewAssistant';
 import TestGenDashboard from './TestGen/TestGenDashboard';
 import DocAnalyzer from './DocAnalyzer/DocAnalyzer';
@@ -57,6 +58,7 @@ export default function AppContent() {
     // Meeting Continuation State
     const [activeMeetingId, setActiveMeetingId] = useState(null);  // null = new meeting, otherwise continuing
     const [sessionNumber, setSessionNumber] = useState(1);
+    const [showCreateMeetingModal, setShowCreateMeetingModal] = useState(false);
 
     // Voice Profile State
     const [voiceProfile, setVoiceProfile] = useState(null);
@@ -278,28 +280,25 @@ export default function AppContent() {
         setNotes(notes);
     }, [sendMessage]);
 
-    // Start listening on mount only (not on every state change)
+    // Start listening on mount only for continuing meetings
     const hasAutoStarted = React.useRef(false);
     useEffect(() => {
-        if (isConnected && !isListening && currentView === 'meeting' && !hasAutoStarted.current) {
+        // Only auto-start if we're continuing an existing meeting
+        if (isConnected && !isListening && currentView === 'meeting' && activeMeetingId && !hasAutoStarted.current) {
             hasAutoStarted.current = true;
 
-            // If no active meeting ID, this is a NEW meeting - clear all state
-            if (!activeMeetingId) {
-                setTranscript([]);
-                setNotes('');
-                setMeetingSummary(null);
-                setSessionNumber(1);
-            }
-
-            // Send start_listening with optional meeting_id for continuation
-            const payload = activeMeetingId ? { meeting_id: activeMeetingId } : {};
+            // Send start_listening with meeting_id for continuation
             sendMessage({
                 type: 'command',
                 action: 'start_listening',
-                payload
+                payload: { meeting_id: activeMeetingId }
             });
             setIsListening(true);
+        }
+
+        // Reset auto-start flag when leaving meeting view
+        if (currentView !== 'meeting') {
+            hasAutoStarted.current = false;
         }
     }, [isConnected, sendMessage, isListening, currentView, activeMeetingId]);
 
@@ -313,23 +312,53 @@ export default function AppContent() {
         }
     }, [isConnected, currentView, sendMessage]);
 
+    const handleCreateMeeting = useCallback(async (meetingData) => {
+        try {
+            const response = await apiPost('/meetings', meetingData);
+            if (response.ok) {
+                const meeting = await response.json();
+                setActiveMeetingId(meeting.id);
+                setShowCreateMeetingModal(false);
+
+                // Clear state for new meeting
+                setTranscript([]);
+                setNotes('');
+                setMeetingSummary(null);
+                setSessionNumber(1);
+
+                // Start listening with the new meeting ID
+                sendMessage({
+                    type: 'command',
+                    action: 'start_listening',
+                    payload: { meeting_id: meeting.id }
+                });
+                setIsListening(true);
+            } else {
+                alert('Failed to create meeting. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error creating meeting:', error);
+            alert('Error creating meeting. Please try again.');
+        }
+    }, [sendMessage]);
+
     const toggleListening = useCallback(() => {
         if (isListening) {
             sendMessage({ type: 'command', action: 'stop_listening' });
             setIsListening(false);
         } else {
-            // If no active meeting ID, this is a NEW meeting - clear all state
+            // If no active meeting ID, show modal to create new meeting
             if (!activeMeetingId) {
-                setTranscript([]);
-                setNotes('');
-                setMeetingSummary(null);
-                setSessionNumber(1);
+                setShowCreateMeetingModal(true);
+            } else {
+                // Continuing existing meeting
+                sendMessage({
+                    type: 'command',
+                    action: 'start_listening',
+                    payload: { meeting_id: activeMeetingId }
+                });
+                setIsListening(true);
             }
-
-            // Send start_listening with optional meeting_id for continuation
-            const payload = activeMeetingId ? { meeting_id: activeMeetingId } : {};
-            sendMessage({ type: 'command', action: 'start_listening', payload });
-            setIsListening(true);
         }
     }, [isListening, sendMessage, activeMeetingId]);
 
@@ -564,6 +593,12 @@ export default function AppContent() {
             <MeetingSummaryModal
                 summary={meetingSummary}
                 onClose={() => setMeetingSummary(null)}
+            />
+
+            <CreateMeetingModal
+                isOpen={showCreateMeetingModal}
+                onClose={() => setShowCreateMeetingModal(false)}
+                onCreate={handleCreateMeeting}
             />
         </div>
     );
