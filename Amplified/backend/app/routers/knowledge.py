@@ -14,7 +14,7 @@ from app.services.vector_store_service import VectorStoreService
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])
+router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 ai_assistant = AIAssistantService()
 vector_store = VectorStoreService(collection_name="unified_knowledge")
 
