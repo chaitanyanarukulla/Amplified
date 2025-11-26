@@ -60,15 +60,31 @@ const KnowledgeVault = ({ onBack }) => {
 
             if (response.ok) {
                 const data = await response.json();
-                // Map results to document format
-                setDocuments(data.results.map(r => ({
-                    id: r.entity_id,
-                    name: r.metadata.filename || r.metadata.meeting_title || r.metadata.jira_ticket || 'Unknown',
-                    type: r.entity_type,
-                    snippet: r.content.substring(0, 200),
-                    created_at: new Date().toISOString(),
-                    relevance: (r.relevance_score * 100).toFixed(0)
-                })));
+
+
+                // Group by entity_id and keep the best match
+                const uniqueResults = new Map();
+
+                data.results.forEach(r => {
+                    const existing = uniqueResults.get(r.entity_id);
+                    if (!existing || r.relevance_score > existing.relevance_score) {
+                        uniqueResults.set(r.entity_id, r);
+                    }
+                });
+
+                // Convert back to array and map to display format
+                const formattedDocs = Array.from(uniqueResults.values())
+                    .sort((a, b) => b.relevance_score - a.relevance_score)
+                    .map(r => ({
+                        id: r.entity_id,
+                        name: r.metadata.filename || r.metadata.meeting_title || r.metadata.jira_ticket || 'Unknown',
+                        type: r.entity_type,
+                        snippet: r.content.substring(0, 200),
+                        created_at: new Date().toISOString(),
+                        relevance: (r.relevance_score * 100).toFixed(0)
+                    }));
+
+                setDocuments(formattedDocs);
             }
         } catch (error) {
             console.error('Search failed:', error);
@@ -188,8 +204,8 @@ const KnowledgeVault = ({ onBack }) => {
                     <button
                         onClick={() => setShowChat(!showChat)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${showChat
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                             }`}
                         title="AI Assistant"
                     >
@@ -344,8 +360,8 @@ const KnowledgeVault = ({ onBack }) => {
                                 chatMessages.map((msg, idx) => (
                                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[85%] rounded-lg p-3 ${msg.role === 'user'
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-slate-700 text-slate-200'
+                                            ? 'bg-purple-600 text-white'
+                                            : 'bg-slate-700 text-slate-200'
                                             }`}>
                                             <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                                             {msg.sources && msg.sources.length > 0 && (
