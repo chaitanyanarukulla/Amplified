@@ -13,18 +13,27 @@ const MeetingHistory = ({ onBack, onContinueMeeting }) => {
     }, []);
 
     const fetchMeetings = async () => {
+        console.log('Fetching meetings...');
         setIsLoading(true);
         try {
             const response = await apiGet('/meetings');
+            console.log('Meetings response status:', response.status);
+
             if (response.ok) {
                 const data = await response.json();
+                console.log('Meetings data:', data);
                 // Sort by date desc
                 data.sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
                 setMeetings(data);
+            } else {
+                console.error('Failed to fetch meetings, status:', response.status);
+                setMeetings([]);
             }
         } catch (error) {
             console.error('Failed to fetch meetings:', error);
+            setMeetings([]);
         } finally {
+            console.log('Fetch meetings complete, setting isLoading to false');
             setIsLoading(false);
         }
     };
