@@ -16,6 +16,7 @@ const KnowledgeVault = ({ onBack }) => {
     const [chatQuestion, setChatQuestion] = useState('');
     const [isAsking, setIsAsking] = useState(false);
     const [stats, setStats] = useState(null);
+    const [selectedEntity, setSelectedEntity] = useState(null); // For detail view
 
     useEffect(() => {
         fetchAllEntities();
@@ -357,7 +358,8 @@ const KnowledgeVault = ({ onBack }) => {
                                 filteredEntities.map((doc) => (
                                     <div
                                         key={`${doc.type}-${doc.id}`}
-                                        className="group flex items-center justify-between p-4 bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/50 hover:border-purple-500/30 rounded-xl transition-all duration-200"
+                                        onClick={() => setSelectedEntity(doc)}
+                                        className="group flex items-center justify-between p-4 bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/50 hover:border-purple-500/30 rounded-xl transition-all duration-200 cursor-pointer"
                                     >
                                         <div className="flex items-center gap-4 overflow-hidden flex-1">
                                             <div className="p-3 bg-slate-700/50 rounded-lg text-purple-400">
@@ -494,7 +496,112 @@ const KnowledgeVault = ({ onBack }) => {
                     </div>
                 )}
             </div>
-        </div>
+
+            {/* Entity Detail Modal */}
+            {selectedEntity && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setSelectedEntity(null)}>
+                    <div className="bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-slate-700 flex items-start justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-lg text-sm font-medium capitalize">
+                                        {selectedEntity.type.replace('_', ' ')}
+                                    </span>
+                                    <span className="text-sm text-slate-400">
+                                        {new Date(selectedEntity.created_at).toLocaleString()}
+                                    </span>
+                                </div>
+                                <h2 className="text-2xl font-bold text-white">{selectedEntity.name}</h2>
+                            </div>
+                            <button
+                                onClick={() => setSelectedEntity(null)}
+                                className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {selectedEntity.type === 'document' && (
+                                <div>
+                                    <div className="mb-4">
+                                        <h3 className="text-sm font-semibold text-slate-400 mb-2">Document Type</h3>
+                                        <p className="text-slate-200 capitalize">{selectedEntity.type}</p>
+                                    </div>
+                                    {selectedEntity.extracted_text && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Content</h3>
+                                            <div className="bg-slate-900/50 rounded-lg p-4 text-slate-300 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                                                {selectedEntity.extracted_text}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {selectedEntity.type === 'meeting' && (
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-slate-400 mb-2">Platform</h3>
+                                        <p className="text-slate-200 capitalize">{selectedEntity.platform || 'Not specified'}</p>
+                                    </div>
+                                    {selectedEntity.summaries && selectedEntity.summaries.length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Summary</h3>
+                                            <div className="bg-slate-900/50 rounded-lg p-4 text-slate-300">
+                                                <p className="mb-3">{selectedEntity.summaries[0].short_summary}</p>
+                                                {selectedEntity.summaries[0].detailed_summary && (
+                                                    <p className="text-sm text-slate-400">{selectedEntity.summaries[0].detailed_summary}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {selectedEntity.actions && selectedEntity.actions.length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Action Items</h3>
+                                            <div className="space-y-2">
+                                                {selectedEntity.actions.map((action, idx) => (
+                                                    <div key={idx} className="bg-slate-900/50 rounded-lg p-3">
+                                                        <p className="text-slate-200">{action.description}</p>
+                                                        {action.owner && (
+                                                            <p className="text-sm text-slate-400 mt-1">Owner: {action.owner}</p>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {selectedEntity.type === 'test_case' && (
+                                <div className="space-y-6">
+                                    {selectedEntity.jira_ticket && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Jira Ticket</h3>
+                                            <p className="text-slate-200">{selectedEntity.jira_ticket}</p>
+                                        </div>
+                                    )}
+                                    {selectedEntity.test_cases && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-400 mb-2">Test Cases</h3>
+                                            <div className="bg-slate-900/50 rounded-lg p-4 text-slate-300 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                                                {JSON.stringify(selectedEntity.test_cases, null, 2)}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )
+            }
+        </div >
     );
 };
 
