@@ -116,8 +116,10 @@ export default function AppContent() {
                 // Format the response for display
                 setCurrentSuggestion({
                     title: "AI Suggestion",
-                    answer: result.answer,
-                    extra_points: result.related_documents?.map(d => d.snippet.substring(0, 100)) || [],
+                    answer: result.answer || "No suggestion available.",
+                    extra_points: result.related_documents?.map(d =>
+                        (d.snippet || d.content || "").substring(0, 100)
+                    ).filter(Boolean) || [],
                     sources: result.related_documents || []
                 });
             } else {
