@@ -277,7 +277,7 @@ Total Test Cases: {len(test_case_list)}
                 "jira_ticket": ticket_key,
                 "ticket_title": ticket_title,
                 "test_count": len(test_case_list),
-                "test_types": list(set(tc.get("type", "unknown") for tc in test_case_list))
+                "test_types": ",".join(set(tc.get("type", "unknown") for tc in test_case_list))
             }
         )
         
