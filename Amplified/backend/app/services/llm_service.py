@@ -190,6 +190,22 @@ Output Format (JSON):
         )
         return result
 
+    async def generate_text(
+        self, 
+        prompt: str, 
+        user_id: str = "default", 
+        system_prompt: Optional[str] = None
+    ) -> str:
+        """Generic method to generate text output from a prompt"""
+        result = await self.router.generate_completion(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            user_id=user_id,
+            max_tokens=self.max_tokens,
+            temperature=self.temperature
+        )
+        return result
+
     async def generate_mock_questions(
         self, 
         resume: str, 

@@ -83,9 +83,8 @@ Context from knowledge base:
 
 Please answer the question based on the context provided. Cite your sources."""
             
-            answer = await self.llm_service.generate_answer(
-                question=prompt,
-                context="",  # Context already in prompt
+            answer = await self.llm_service.generate_text(
+                prompt=prompt,
                 user_id=user_id,
                 system_prompt=system_prompt
             )
@@ -333,9 +332,15 @@ Focus on:
 3. Important context from documents
 4. Related test cases or requirements"""
             
-            answer = await self.llm_service.generate_answer(
-                question=question,
-                context=context,
+            prompt = f"""Question: {question}
+            
+Context:
+{context}
+
+Please provide a concise answer based on the context."""
+
+            answer = await self.llm_service.generate_text(
+                prompt=prompt,
                 user_id=user_id,
                 system_prompt=system_prompt
             )
