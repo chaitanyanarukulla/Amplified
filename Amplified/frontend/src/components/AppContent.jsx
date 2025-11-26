@@ -87,7 +87,13 @@ export default function AppContent() {
     });
 
     // Actions - Define these before they're used in hooks
-    const handleSuggest = useCallback(async () => {
+    const handleSuggest = useCallback(async (clearSuggestion = false) => {
+        // If called with null or true, clear the suggestion
+        if (clearSuggestion === null || clearSuggestion === true) {
+            setCurrentSuggestion(null);
+            return;
+        }
+
         setIsProcessing(true);
         setError(null);
 
