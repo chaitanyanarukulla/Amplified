@@ -98,11 +98,29 @@ async def list_documents(
 @router.post("/search")
 async def search_documents(
     query: str = Form(...),
-    limit: int = Form(5),
+    limit: int = Form(10),
     current_user: User = Depends(get_current_user)
 ):
-    """Search documents"""
-    return document_service.search_documents(query, limit, current_user.id)
+    """
+    Semantic search across documents using RAG.
+    Returns documents with snippets and relevance scores.
+    """
+    results = document_service.search_documents(query, limit, current_user.id)
+    
+    # Enhance results with better formatting
+    enhanced_results = []
+    for r in results:
+        enhanced_results.append({
+            "id": r["document_id"],
+            "filename": r["filename"],
+            "snippet": r["snippet"],
+            "score": r["score"],
+            "type": "document",
+            "created_at": None  # Could fetch from DB if needed
+        })
+    
+    return enhanced_results
+
 
 @router.delete("/{document_id}")
 async def delete_document(

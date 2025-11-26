@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException, Form, Depends
+from pydantic import BaseModel
 from app.models import MeetingCreate, MeetingUpdate, ActionCreate, User
 from app.dependencies import meeting_service
 from app.auth_dependencies import get_current_user
+from app.services.ai_assistant_service import AIAssistantService
 
 router = APIRouter(prefix="/meetings", tags=["meetings"])
+ai_assistant = AIAssistantService()
 
 @router.post("")
 async def create_meeting(
@@ -113,3 +116,25 @@ async def update_action_status(
     if not action:
         raise HTTPException(status_code=404, detail="Action item not found")
     return action
+
+# AI-Powered Features
+
+class AskQuestionRequest(BaseModel):
+    question: str
+
+@router.post("/{meeting_id}/ask")
+async def ask_meeting_question(
+    meeting_id: str,
+    request: AskQuestionRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Ask a question during a meeting and get AI-powered answer with context.
+    Uses RAG to search past meetings, documents, and test cases.
+    """
+    result = await ai_assistant.get_meeting_context(
+        question=request.question,
+        user_id=current_user.id,
+        meeting_id=meeting_id
+    )
+    return result

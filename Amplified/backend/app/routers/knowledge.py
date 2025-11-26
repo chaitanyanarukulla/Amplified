@@ -1,22 +1,27 @@
 """
-Unified Knowledge Search Router
-Provides RAG-powered search across all indexed artifacts (documents, meetings, test cases, etc.)
+Knowledge Router - Powers the Knowledge Vault UI with RAG
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
+from typing import Optional, List
 import structlog
 
 from app.auth_dependencies import get_current_user
+from app.models import User
+from app.services.ai_assistant_service import AIAssistantService
 from app.services.vector_store_service import VectorStoreService
 
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])
-
-# Initialize vector store service
+ai_assistant = AIAssistantService()
 vector_store = VectorStoreService(collection_name="unified_knowledge")
+
+
+class AskRequest(BaseModel):
+    question: str
+    context_type: Optional[str] = None  # meeting, document, test_case
 
 
 class SearchResult(BaseModel):
@@ -33,33 +38,42 @@ class SearchResponse(BaseModel):
     total_results: int
 
 
-@router.get("/search", response_model=SearchResponse)
-async def search_knowledge(
-    q: str = Query(..., description="Search query"),
-    limit: int = Query(10, ge=1, le=50, description="Maximum number of results"),
-    entity_type: Optional[str] = Query(None, description="Filter by entity type (document, meeting, test_case)"),
-    current_user: dict = Depends(get_current_user)
+@router.post("/ask")
+async def ask_knowledge_base(
+    request: AskRequest,
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Search across all indexed knowledge artifacts.
-    
-    This endpoint uses RAG to find relevant content from:
-    - Documents (uploaded files, specs, BRDs, etc.)
-    - Meetings (summaries and action items)
-    - Test Cases (generated test suites)
-    - Jira Tickets (synced tickets)
+    Ask a question and get AI-powered answer from knowledge base.
+    This powers the Knowledge Vault Q&A feature.
+    """
+    result = await ai_assistant.answer_question(
+        question=request.question,
+        user_id=current_user.id,
+        context_type=request.context_type
+    )
+    return result
+
+
+@router.get("/search")
+async def search_knowledge(
+    q: str = Query(..., description="Search query"),
+    limit: int = Query(10, ge=1, le=50),
+    entity_type: Optional[str] = Query(None, description="Filter by type"),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Semantic search across all knowledge (documents, meetings, test cases).
+    Enhanced version that returns formatted results for the UI.
     """
     try:
-        user_id = current_user["id"]
-        
         results = vector_store.search(
             query=q,
-            user_id=user_id,
+            user_id=current_user.id,
             limit=limit,
             entity_type=entity_type
         )
         
-        # Format results
         search_results = []
         for result in results:
             search_results.append(SearchResult(
@@ -77,26 +91,23 @@ async def search_knowledge(
         )
         
     except Exception as e:
-        logger.error(f"Knowledge search failed: {e}", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+        logger.error(f"Knowledge search failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/stats")
 async def get_knowledge_stats(
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
-    """
-    Get statistics about indexed knowledge for the current user.
-    """
+    """Get statistics about indexed knowledge"""
     try:
-        user_id = current_user["id"]
+        user_id = current_user.id
         
         # Get counts by entity type
-        entity_types = ["document", "meeting", "test_case", "jira_ticket"]
+        entity_types = ["document", "meeting", "test_case"]
         stats = {}
         
         for entity_type in entity_types:
-            # Do a dummy search to get count (not ideal, but works for now)
             results = vector_store.search(
                 query="",
                 user_id=user_id,
@@ -114,3 +125,33 @@ async def get_knowledge_stats(
     except Exception as e:
         logger.error(f"Failed to get knowledge stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/suggest-tags")
+async def suggest_tags(
+    content: str,
+    entity_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Suggest tags based on similar content"""
+    tags = await ai_assistant.suggest_tags(
+        content=content,
+        user_id=current_user.id,
+        entity_type=entity_type
+    )
+    return {"suggested_tags": tags}
+
+
+@router.post("/check-duplicate")
+async def check_duplicate(
+    content: str,
+    entity_type: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Check if content is similar to existing content"""
+    result = await ai_assistant.check_duplicate(
+        content=content,
+        user_id=current_user.id,
+        entity_type=entity_type
+    )
+    return result or {"is_duplicate": False}

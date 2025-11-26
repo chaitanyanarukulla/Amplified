@@ -529,3 +529,58 @@ async def delete_generation(
     logger.info(f"Deleted test generation {generation_id} from SQL and vector store")
     
     return {"status": "success", "message": "Test generation deleted"}
+
+
+# AI-Powered Features
+
+@router.post("/recommendations")
+async def get_test_recommendations(
+    ticket_description: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get test case recommendations based on similar tickets.
+    Uses RAG to find similar test cases from past work.
+    """
+    from app.services.ai_assistant_service import AIAssistantService
+    import json
+    
+    ai_assistant = AIAssistantService()
+    
+    # Get recommendations
+    recommendations = await ai_assistant.get_recommendations(
+        content=ticket_description,
+        user_id=current_user.id,
+        entity_type="test_case",
+        limit=5
+    )
+    
+    # Enhance with full test case details
+    enhanced_recs = []
+    for rec in recommendations:
+        try:
+            # Get the full test generation
+            with Session(engine) as session:
+                test_gen = session.exec(
+                    select(TestCaseGeneration).where(
+                        TestCaseGeneration.id == rec["id"],
+                        TestCaseGeneration.user_id == current_user.id
+                    )
+                ).first()
+                
+                if test_gen:
+                    enhanced_recs.append({
+                        "ticket_key": test_gen.jira_ticket_key,
+                        "ticket_title": test_gen.jira_title,
+                        "similarity_score": rec["similarity_score"],
+                        "test_cases": json.loads(test_gen.generated_test_cases),
+                        "snippet": rec["snippet"]
+                    })
+        except Exception as e:
+            logger.error(f"Failed to enhance recommendation: {e}")
+            continue
+    
+    return {
+        "recommendations": enhanced_recs,
+        "message": f"Found {len(enhanced_recs)} similar test cases"
+    }
