@@ -186,12 +186,23 @@ async def handle_command(websocket: WebSocket, session_id: str, message: dict):
     # session_id is the user_id in this implementation
     user_id = session_id
     
+    # Ensure session exists
+    session = session_manager.active_sessions.get(session_id)
+    if not session:
+        logger.warning(f"Session {session_id} not found in handle_command. Recreating.")
+        session_manager.create_session(session_id, websocket)
+        session = session_manager.active_sessions.get(session_id)
+        
+    if not session:
+        logger.error(f"Critical error: Could not create/retrieve session {session_id}")
+        return
+    
     if action == "start_listening":
         # Get payload from message
         payload = message.get("payload", {})
         continuing_meeting_id = payload.get("meeting_id")  # If provided, we're continuing an existing meeting
         
-        session = session_manager.active_sessions.get(session_id)
+
         
         if continuing_meeting_id:
             # Continuing an existing meeting
