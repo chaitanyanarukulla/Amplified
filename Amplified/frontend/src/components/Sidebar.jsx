@@ -26,6 +26,7 @@ const Sidebar = ({ currentView, onNavigate }) => {
         { id: 'history', label: 'History', icon: History, color: 'text-slate-500 dark:text-slate-400' },
         { id: 'vault', label: 'Knowledge Vault', icon: Database, color: 'text-slate-500 dark:text-slate-400' },
         { id: 'doc-analyzer', label: 'Doc Analyzer', icon: FileText, color: 'text-slate-500 dark:text-slate-400' },
+        { id: 'test-plan-gen', label: 'Test Plan Gen', icon: FileText, color: 'text-slate-500 dark:text-slate-400' },
         { id: 'voice', label: 'Voice Profile', icon: Mic, color: 'text-slate-500 dark:text-slate-400' },
     ];
 

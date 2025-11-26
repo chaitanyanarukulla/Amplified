@@ -13,6 +13,7 @@ import MockInterviewBriefing from './MockInterviewBriefing';
 import MeetingAssistant from './MeetingAssistant';
 import InterviewAssistant from './InterviewAssistant';
 import TestGenDashboard from './TestGen/TestGenDashboard';
+import TestPlanGenDashboard from './TestPlanGen/TestPlanGenDashboard';
 import DocAnalyzer from './DocAnalyzer/DocAnalyzer';
 import Footer from './Footer';
 import Login from './Login';
@@ -578,6 +579,9 @@ export default function AppContent() {
             case 'test-gen':
                 return <TestGenDashboard onBack={() => setCurrentView('dashboard')} />;
 
+            case 'test-plan-gen':
+                return <TestPlanGenDashboard onBack={() => setCurrentView('dashboard')} />;
+
             case 'doc-analyzer':
                 return <DocAnalyzer />;
 
@@ -586,7 +590,7 @@ export default function AppContent() {
         }
     };
 
-    const shouldShowSidebar = ['dashboard', 'history', 'vault', 'voice', 'test-gen', 'doc-analyzer', 'settings'].includes(currentView);
+    const shouldShowSidebar = ['dashboard', 'history', 'vault', 'voice', 'test-gen', 'test-plan-gen', 'doc-analyzer', 'settings'].includes(currentView);
 
     // Show loading while checking auth
     if (loading) {

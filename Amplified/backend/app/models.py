@@ -127,6 +127,29 @@ class JiraSettings(SQLModel, table=True):
     api_token_encrypted: str
     created_at: datetime = Field(default_factory=datetime.now)
 
+class ConfluenceSettings(SQLModel, table=True):
+    __tablename__ = "confluence_settings"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str = Field(foreign_key="users.id")
+    base_url: str
+    username: str # email or username
+    api_token_encrypted: str
+    space_keys: Optional[str] = None # Comma-separated default spaces
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+class TestPlanGenerationHistory(SQLModel, table=True):
+    __tablename__ = "test_plan_history"
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    user_id: str = Field(foreign_key="users.id", index=True)
+    source_type: str = Field(index=True) # "confluence" | "uploaded_document"
+    source_identifier: str # page_id/url or document_id
+    output_type: str # "test_plan" | "test_strategy"
+    raw_input_summary: Optional[str] = None
+    llm_model_used: Optional[str] = None
+    generated_content: str # Markdown content
+    created_at: datetime = Field(default_factory=datetime.now)
+
 class TestCaseGeneration(SQLModel, table=True):
     __tablename__ = "test_case_generations"
     id: str = Field(primary_key=True)
