@@ -1,7 +1,8 @@
 """
 Database Reset Script for UAT Testing
 
-WARNING: This script will DELETE ALL DATA from both PostgreSQL and ChromaDB.
+WARNING: This script will DELETE ALL DATA from both the SQL database and ChromaDB.
+Works with both SQLite (development) and PostgreSQL (production).
 Only run this in development/testing environments!
 
 Usage:
@@ -32,16 +33,19 @@ def reset_chromadb():
         logger.info("ChromaDB directory not found, skipping")
 
 
-def reset_postgresql():
-    """Delete all data from PostgreSQL tables"""
-    logger.info("Resetting PostgreSQL database...")
+def reset_database():
+    """Delete all data from database (works with both SQLite and PostgreSQL)"""
+    logger.info("Resetting database...")
     
     with Session(engine) as session:
         try:
-            # Disable foreign key checks temporarily
-            session.exec(text("SET session_replication_role = 'replica';"))
+            # Detect database type
+            db_url = str(engine.url)
+            is_sqlite = db_url.startswith('sqlite')
             
-            # List of tables to truncate (in order to handle foreign keys)
+            logger.info(f"Database type: {'SQLite' if is_sqlite else 'PostgreSQL'}")
+            
+            # List of tables to delete from (in order to handle foreign keys)
             tables = [
                 "meeting_actions",
                 "meeting_summaries",
@@ -56,18 +60,33 @@ def reset_postgresql():
                 "users"
             ]
             
-            for table in tables:
-                try:
-                    logger.info(f"Truncating table: {table}")
-                    session.exec(text(f"TRUNCATE TABLE {table} CASCADE;"))
-                except Exception as e:
-                    logger.warning(f"Could not truncate {table}: {e}")
-            
-            # Re-enable foreign key checks
-            session.exec(text("SET session_replication_role = 'origin';"))
+            if is_sqlite:
+                # SQLite: Disable foreign keys, delete all rows
+                session.exec(text("PRAGMA foreign_keys = OFF;"))
+                
+                for table in tables:
+                    try:
+                        logger.info(f"Deleting from table: {table}")
+                        session.exec(text(f"DELETE FROM {table};"))
+                    except Exception as e:
+                        logger.warning(f"Could not delete from {table}: {e}")
+                
+                session.exec(text("PRAGMA foreign_keys = ON;"))
+            else:
+                # PostgreSQL: Use TRUNCATE with CASCADE
+                session.exec(text("SET session_replication_role = 'replica';"))
+                
+                for table in tables:
+                    try:
+                        logger.info(f"Truncating table: {table}")
+                        session.exec(text(f"TRUNCATE TABLE {table} CASCADE;"))
+                    except Exception as e:
+                        logger.warning(f"Could not truncate {table}: {e}")
+                
+                session.exec(text("SET session_replication_role = 'origin';"))
             
             session.commit()
-            logger.info("✅ PostgreSQL data deleted")
+            logger.info("✅ Database data deleted")
             
         except Exception as e:
             session.rollback()
@@ -98,11 +117,11 @@ def main():
     print("\n🔄 Starting database reset...\n")
     
     try:
-        # Reset ChromaDB first (safer, can rebuild from PostgreSQL)
+        # Reset ChromaDB first (safer, can rebuild from database)
         reset_chromadb()
         
-        # Reset PostgreSQL
-        reset_postgresql()
+        # Reset database (SQLite or PostgreSQL)
+        reset_database()
         
         print("\n" + "="*60)
         print("✅ DATABASE RESET COMPLETE")
