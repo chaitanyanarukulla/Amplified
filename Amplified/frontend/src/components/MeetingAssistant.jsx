@@ -45,6 +45,15 @@ const MeetingAssistant = ({
         notesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [notes, actionItems]);
 
+    // Reset form when starting a new meeting (activeMeetingId becomes null)
+    useEffect(() => {
+        if (!activeMeetingId && !isListening) {
+            setMeetingTitle('');
+            setMeetingPlatform('zoom');
+            setMeetingStartTime(new Date().toISOString().slice(0, 16));
+        }
+    }, [activeMeetingId, isListening]);
+
     // Simulate live note extraction
     useEffect(() => {
         if (isListening && transcript.length > 0) {
