@@ -26,7 +26,7 @@ This document outlines the work completed to fix the Playwright E2E test suite a
   - Meeting endpoints: `/meetings`, `/meetings/:id`
   - Voice profile endpoints: `/voice-profile/**`
   - QA/suggestion endpoints: `/qa/meeting`
-  - Document upload: `/upload/document`
+  - Document upload: `/documents/upload/document`
   - Mock interview endpoints: `/mock/prepare`, `/mock/question`, `/mock/feedback`
 - **Benefits**: Tests can run without a backend server
 

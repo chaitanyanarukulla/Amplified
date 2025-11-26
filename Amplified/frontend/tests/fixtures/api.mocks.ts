@@ -126,7 +126,7 @@ export const mockApi = async (page: Page) => {
 
     // Mock Documents Upload
     // Mock Documents Upload (Legacy)
-    await page.route('**/upload/document', async (route) => {
+    await page.route('**/documents/upload/document', async (route) => {
         await route.fulfill({
             status: 200,
             json: { id: 'doc_1', name: 'test-doc.txt', uploaded: true },

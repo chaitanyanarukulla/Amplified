@@ -76,7 +76,7 @@ const MeetingAssistant = ({
         formData.append('type', selectedDocType);
 
         try {
-            const response = await apiUpload('/upload/document', formData);
+            const response = await apiUpload('/documents/upload/document', formData);
 
             if (response.ok) {
                 const data = await response.json();

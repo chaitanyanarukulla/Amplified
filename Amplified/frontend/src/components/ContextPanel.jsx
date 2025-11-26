@@ -69,7 +69,7 @@ const ContextPanel = ({ onUpdateNotes, isOpen, onClose, initialNotes = '' }) => 
         formData.append('type', type === 'resume' ? 'resume' : 'job_description');
 
         try {
-            const response = await apiUpload('/upload/document', formData);
+            const response = await apiUpload('/documents/upload/document', formData);
 
             if (response.ok) {
                 setUploadStatus(prev => ({ ...prev, [type]: 'success' }));
